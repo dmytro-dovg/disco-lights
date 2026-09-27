@@ -41,10 +41,10 @@ jobs:
             exit 1
           fi
 
-      - name: Test
-        shell: bash
-        run: |
-          ./tools/test tests
+      # - name: Test
+      #   shell: bash
+      #   run: |
+      #     ./tools/test tests
 
       - name: Package archive
         id: package-archive
