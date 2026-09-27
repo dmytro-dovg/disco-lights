@@ -15,7 +15,22 @@ data:extend({
             mode = { "nothing", },
         },
         alt_select = {
-            border_color = { r = 1, g = 0.5, b = 0 },
+            border_color = { r = 1, g = 0.3, b = 0 },
+            cursor_box_type = "entity",
+            mode = { "nothing", },
+        },
+        reverse_select = {
+            border_color = { r = 1, g = 0, b = 0.3 },
+            cursor_box_type = "entity",
+            mode = { "nothing", },
+        },
+        alt_reverse_select = {
+            border_color = { r = 0, g = 0.3, b = 1 },
+            cursor_box_type = "entity",
+            mode = { "nothing", },
+        },
+        super_forced_select = {
+            border_color = { r = 1, g = 0, b = 1 },
             cursor_box_type = "entity",
             mode = { "nothing", },
         },

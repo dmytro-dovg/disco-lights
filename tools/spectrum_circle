@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+die() {
+    printf '%s\n' "$1" >&2
+    exit "${2:-1}"
+}
+
+usage() {
+    printf "Usage: %s RADIUS FRAMES FRAME_SIZE OUTPUT\n" "${0##*/}" >&2
+}
+
+main() {
+    set -e
+    local radius=$1
+    local count=$2
+    local frame_size=$3
+    local output=$4
+
+    if (( $# < 4 )); then
+        usage
+        return 1
+    fi
+
+    local im
+    if command -v magick >/dev/null 2>&1; then
+        im=magick
+    elif command -v convert >/dev/null 2>&1; then
+        im=convert
+    else 
+        die "No ImageMagick installed."
+    fi
+
+    local temp_dir
+    temp_dir="$(mktemp -d)" || die "Cannot create temp dir"
+    trap "rm -rf '$temp_dir'" EXIT
+
+    local center=$(awk "BEGIN{print ($frame_size-1)/2}")
+    local edge=$(awk "BEGIN{print ($frame_size-1)/2 + $radius}")
+
+    $im -size ${frame_size}x${frame_size} xc:black -fill white \
+        -draw "circle $center,$center $edge,$center" "$temp_dir/mask.png"
+
+    local k hue_shift
+    for ((k = 0; k < count; k++)); do
+        hue_shift=$(awk "BEGIN{print 1 - $k/$count}")
+        $im -size ${frame_size}x${frame_size} xc: \
+            -fx "(i+j)/(2*w) + $hue_shift - floor((i+j)/(2*w) + $hue_shift)" \
+            \( +clone -fill white -colorize 100 \) \
+            \( +clone -fill gray50 -colorize 100 \) \
+            -set colorspace HSL -combine -colorspace sRGB \
+            "$temp_dir/mask.png" -alpha off -compose CopyOpacity -composite \
+            "$temp_dir/frame_$(printf '%04d' $k).png"
+    done
+
+    $im "$temp_dir"/frame_*.png -background none +append +repage "$output"
+
+    printf 'Wrote %s (%sx%s)\n' "$output" "$((frame_size * count))" "$frame_size" >&2
+}
+
+main "$@"
