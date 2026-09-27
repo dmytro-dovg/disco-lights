@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="129"
+   height="129"
+   viewBox="0 0 129 129"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   inkscape:export-filename="light_2.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   sodipodi:docname="light.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="px"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="322.44069"
+     inkscape:cy="114.5513"
+     inkscape:window-width="2560"
+     inkscape:window-height="1412"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer2" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient2614"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop2614" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop2615" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect11"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,141.17647,0,1 @ F,0,0,1,0,141.17647,0,1 @ F,0,0,1,0,141.17647,0,1 @ F,0,0,1,0,141.17647,0,1"
+       radius="256"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,141.17647,0,1 @ F,0,0,1,0,141.17647,0,1 @ F,0,0,1,0,141.17647,0,1 @ F,0,0,1,0,141.17647,0,1"
+       radius="256"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect1"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2614"
+       id="radialGradient2615"
+       cx="150"
+       cy="150"
+       fx="150"
+       fy="150"
+       r="150"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="scale(0.42999998)" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:none">
+    <rect
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2;paint-order:markers fill stroke"
+       id="rect2"
+       width="513"
+       height="513"
+       x="0"
+       y="0"
+       inkscape:label="bg" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2"
+     style="display:inline">
+    <rect
+       style="display:inline;fill:url(#radialGradient2615);stroke-width:0;stroke-opacity:0;paint-order:markers fill stroke"
+       id="path10"
+       width="129"
+       height="129"
+       x="0"
+       y="0"
+       sodipodi:type="rect"
+       inkscape:label="8glow" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer 3"
+     style="display:none">
+    <rect
+       style="display:inline;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.999999;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2615"
+       width="256"
+       height="256"
+       x="0"
+       y="0"
+       inkscape:label="tl" />
+    <rect
+       style="fill:#1a1a1a;fill-opacity:1;stroke:none;stroke-width:1;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2617"
+       width="0.99999821"
+       height="256"
+       x="256"
+       y="0"
+       inkscape:label="tm" />
+    <rect
+       style="display:inline;fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.999999;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2618"
+       width="256"
+       height="256"
+       x="257"
+       y="0"
+       inkscape:label="tr" />
+    <rect
+       style="fill:#f9f9f9;fill-opacity:1;stroke:none;stroke-width:1;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2619"
+       width="0.99999821"
+       height="256"
+       x="256"
+       y="257"
+       inkscape:label="bm" />
+    <rect
+       style="display:inline;fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:0.999999;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2620"
+       width="256"
+       height="256"
+       x="0"
+       y="257"
+       inkscape:label="bl" />
+    <rect
+       style="display:inline;fill:#008080;fill-opacity:1;stroke:none;stroke-width:0.999999;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2621"
+       width="256"
+       height="256"
+       x="257"
+       y="257"
+       inkscape:label="tl" />
+    <rect
+       style="fill:#1a1a1a;fill-opacity:1;stroke:none;stroke-width:0.999999;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2622"
+       width="256"
+       height="1"
+       x="0"
+       y="256"
+       inkscape:label="ml" />
+    <rect
+       style="fill:#f9f9f9;fill-opacity:1;stroke:none;stroke-width:0.999999;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2623"
+       width="256"
+       height="1"
+       x="257"
+       y="256"
+       inkscape:label="mr" />
+    <rect
+       style="fill:#ff00ff;fill-opacity:1;stroke:none;stroke-width:1;stroke-opacity:0;paint-order:markers fill stroke"
+       id="rect2624"
+       width="1"
+       height="1"
+       x="256"
+       y="256"
+       inkscape:label="mm" />
+  </g>
+</svg>
