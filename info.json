@@ -1,0 +1,11 @@
+{
+    "name": "disco-lights",
+    "description": "Placeble ambient lights.",
+    "version": "0.0.1",
+    "title": "Disco Lights",
+    "author": "imoth_f",
+    "factorio_version": "2.1",
+    "dependencies": [
+        "base >= 2.1"
+    ]
+}
