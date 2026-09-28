@@ -379,6 +379,19 @@ script.on_event(defines.events.on_player_left_game, function(event)
     apply_overlay_audience_to_all()
 end)
 
+script.on_event(defines.events.on_pre_surface_deleted, function(event)
+    local to_delete = {}
+    for index, light in pairs(storage.lights) do
+        if light.surface.index == event.surface_index then
+            destroy_light(light)
+            table.insert(to_delete, index)
+        end
+    end
+    for _, index in pairs(to_delete) do
+        storage.lights[index] = nil
+    end
+end)
+
 script.on_configuration_changed(function(event)
     -- Close all open windows
     if not storage.players then return end
