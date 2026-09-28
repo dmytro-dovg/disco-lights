@@ -8,6 +8,12 @@ C.debug = {
     log_in_game = true,
 }
 
+---@type string
+C.sprite_prefix = "disco-lights"
+
+---@type string
+C.selection_tool_name = "disco-lights-tool"
+
 ---@type string[]
 C.sprite_row_letters = { "t", "m", "b", }
 
@@ -17,8 +23,6 @@ C.sprite_column_letters = { "l", "m", "r", }
 ---@type integer[]
 C.radii = { 1, 2, 4, 8, 16, }
 
----@type string
-C.sprite_prefix = "disco-light"
 
 ---@type Mode[]
 C.modes = { "static", "spectrum", }

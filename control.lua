@@ -299,7 +299,7 @@ local function update_planner(player_index)
     local player = game.get_player(player_index)
     if not player then return end
     local cursor_stack = player.cursor_stack
-    if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == "disco-lights-tool" then
+    if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == C.selection_tool_name then
         enable_editting(true)
         local color = current_player_last_color(player_index) or {r=1, g=1, b=1,}
         cursor_stack.label = "[color=" .. color.r .. ",".. color.g .. "," .. color.b .. "]⬤[/color]" ..
@@ -424,9 +424,14 @@ end)
 ---@param list any[]
 local function cycle_setting_and_update(event, setting_name, delta, list)
     local player_index = event.player_index
-    local settings = storage.players[player_index]
-    settings[setting_name] = U.cycle_index(settings[setting_name], delta, #list)
-    update_planner(player_index)
+    local player = game.get_player(player_index)
+    if not player then return end
+    local cursor_stack = player.cursor_stack
+    if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == C.selection_tool_name then
+        local settings = storage.players[player_index]
+        settings[setting_name] = U.cycle_index(settings[setting_name], delta, #list)
+        update_planner(player_index)
+    end
 end
 
 ---@param event EventData.CustomInputEvent
