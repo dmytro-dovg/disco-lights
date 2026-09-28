@@ -83,7 +83,7 @@ function U.d(player, msg, ...)
         ---@type LuaPlayer?
         local player_object
         if type(player) == "number" then
-            player_object = game.get_player(player).print(message)
+            player_object = game.get_player(player)
         else
             player_object = player
         end

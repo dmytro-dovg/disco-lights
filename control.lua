@@ -319,7 +319,7 @@ end)
 script.on_event(defines.events.on_player_joined_game, function(event)
     ---@type PlayerSettings
     local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, }
-    table.insert(storage.players, player_settings)
+    storage.players[event.player_index] = player_settings
 end)
 
 script.on_event("clear-disco-lights", function(event)
