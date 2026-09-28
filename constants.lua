@@ -39,8 +39,8 @@ C.sprites = {
     light = function (radius, row, column)
         return C.sprite_prefix .. "-" .. radius .. "-" .. row .. column
     end,
-    spectrum_circle = C.sprite_prefix .. "spectrum_circle",
-    circle = C.sprite_prefix .. "circle",
+    spectrum_circle = C.sprite_prefix .. "-spectrum_circle",
+    circle = C.sprite_prefix .. "-circle",
 }
 
 ---@type number
