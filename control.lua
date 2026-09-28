@@ -310,16 +310,46 @@ end
 
 --- Events
 
+---@param player_index integer
+local function init_player(player_index)
+    ---@type PlayerSettings
+    local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, }
+    storage.players[player_index] = player_settings
+end
+
+---@param player_index integer
+---@
+local function hide_gui(player_index)
+    local gui = storage.players[player_index].gui
+    if not gui then return end
+    gui.frame.destroy()
+    storage.players[player_index].gui = nil
+end
+
 script.on_init(function()
     storage.lights = {}
     storage.players = {}
     storage.last_id = 1
+    for _, player in pairs(game.connected_players) do
+        init_player(player.index)
+    end
 end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
-    ---@type PlayerSettings
-    local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, }
-    storage.players[event.player_index] = player_settings
+    init_player(event.player_index)
+end)
+
+script.on_event(defines.events.on_player_left_game, function(event)
+    hide_gui(event.player_index)
+    storage.players[event.player_index] = nil
+end)
+
+script.on_configuration_changed(function(event)
+    -- Close all open windows
+    if not storage.players then return end
+    for player_index, _ in pairs(storage.players) do
+        hide_gui(player_index)
+    end
 end)
 
 script.on_event("clear-disco-lights", function(event)
@@ -349,8 +379,7 @@ script.on_event(defines.events.on_gui_click, function(event)
     local gui = storage.players[player_index].gui
     if not gui then return end
     if event.element == gui.close_button then
-        gui.frame.destroy()
-        storage.players[player_index].gui = nil
+        hide_gui(player_index)
     end
 end)
 
