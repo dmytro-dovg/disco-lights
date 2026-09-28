@@ -343,6 +343,7 @@ end
 
 ---@param player_index integer
 local function init_player(player_index)
+    if storage.players[player_index] then return end
     ---@type PlayerSettings
     local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, editing = false, }
     storage.players[player_index] = player_settings
@@ -351,7 +352,9 @@ end
 ---@param player_index integer
 ---@
 local function hide_gui(player_index)
-    local gui = storage.players[player_index].gui
+    local player_settings = storage.players[player_index]
+    if not player_settings or not player_settings.gui then return end
+    local gui = player_settings.gui
     if not gui then return end
     if gui.frame.valid then
         gui.frame.destroy()
@@ -374,6 +377,15 @@ script.on_event(defines.events.on_player_joined_game, function(event)
 end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
+    hide_gui(event.player_index)
+    local player_settings = storage.players[event.player_index]
+    if player_settings then
+        player_settings.editing = false
+    end
+    apply_overlay_audience_to_all()
+end)
+
+script.on_event(defines.events.on_player_removed, function(event)
     hide_gui(event.player_index)
     storage.players[event.player_index] = nil
     apply_overlay_audience_to_all()
