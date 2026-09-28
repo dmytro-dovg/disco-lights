@@ -19,6 +19,7 @@ local ColorPickerGui = require "gui.color-picker-gui"
 ---@field radius_index integer
 ---@field mode_index integer
 ---@field last_color Color
+---@field editing boolean
 ---@field gui ColorPickerGui?
 
 ---@class ModStorage
@@ -284,7 +285,10 @@ local function handle_selection(event, selection_type)
 end
 
 ---@param enabled boolean
-local function enable_editting(enabled)
+local function enable_editting(player_index, enabled)
+    local player_settings = storage.players[player_index]
+    if player_settings.editing == enabled then return end
+    player_settings.editing = enabled
     for _, light in pairs(storage.lights) do
         for _, name in pairs({ "corners", "edit_gui", "map_shapes", }) do
             modify_renders(light, name, function (object)
@@ -300,13 +304,13 @@ local function update_planner(player_index)
     if not player then return end
     local cursor_stack = player.cursor_stack
     if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == C.selection_tool_name then
-        enable_editting(true)
+        enable_editting(player_index, true)
         local color = current_player_last_color(player_index) or {r=1, g=1, b=1,}
         cursor_stack.label = "[color=" .. color.r .. ",".. color.g .. "," .. color.b .. "]⬤[/color]" ..
             "\nRadius: " .. tostring(current_player_radius(player_index)) ..
             "\nMode: " .. C.modes[storage.players[player_index].mode_index]
     else
-        enable_editting(false)
+        enable_editting(player_index, false)
     end
 end
 
@@ -315,7 +319,7 @@ end
 ---@param player_index integer
 local function init_player(player_index)
     ---@type PlayerSettings
-    local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, }
+    local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, editing = false, }
     storage.players[player_index] = player_settings
 end
 
