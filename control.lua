@@ -375,6 +375,10 @@ script.on_init(function()
     end
 end)
 
+script.on_event(defines.events.on_player_created, function(event)
+    init_player(event.player_index)
+end)
+
 script.on_event(defines.events.on_player_joined_game, function(event)
     init_player(event.player_index)
     update_planner(event.player_index)
