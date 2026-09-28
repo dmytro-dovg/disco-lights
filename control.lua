@@ -8,6 +8,7 @@ local ColorPickerGui = require "gui.color-picker-gui"
 
 ---@class DiscoLight
 ---@field render_objects { light_tiles: LuaRenderObject[], corners: LuaRenderObject[], edit_gui: LuaRenderObject[], map_shapes: LuaRenderObject[] }
+---@field surface LuaSurface
 ---@field color Color?
 ---@field phase float
 ---@field duration integer
@@ -229,6 +230,7 @@ local function draw_light(player_index, rect, surface, mode, color)
     local light = {
         mode = C.modes[storage.players[player_index].mode_index],
         render_objects = { light_tiles = tiles, corners = corners, edit_gui = edit_gui, map_shapes = map_shapes, },
+        surface = surface,
         color = color,
         rect = Rect.new(left, top, width, height),
         phase = math.random() * 2 * math.pi,
@@ -258,7 +260,7 @@ local function handle_selection(event, selection_type)
     elseif selection_type == "rev-select" then -- Remove light
         local to_delete = {}
         for i, light in pairs(storage.lights) do
-            if Rect.is_in_rect(light.rect, rect) then
+            if light.surface == event.surface and Rect.is_in_rect(light.rect, rect) then
                 table.insert(to_delete, i)
             end
         end
