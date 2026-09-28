@@ -66,21 +66,38 @@ local function clear_lights()
 end
 
 ---@param player_index integer
+---@return PlayerSettings
+local function init_player_settings(player_index)
+    local player_settings = storage.players[player_index]
+    if not player_settings then
+        player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, editing = false, }
+        storage.players[player_index] = player_settings
+    end
+    return player_settings
+end
+
+---@param player_index integer
+---@return PlayerSettings
+local function get_or_init_player_settings(player_index)
+    return storage.players[player_index] or init_player_settings(player_index)
+end
+
+---@param player_index integer
 ---@return integer
 local function current_player_radius(player_index)
-    return C.radii[storage.players[player_index] and storage.players[player_index].radius_index or 1]
+    return C.radii[get_or_init_player_settings(player_index).radius_index]
 end
 
 ---@param player_index integer
 ---@return Mode
 local function current_player_mode(player_index)
-    return C.modes[storage.players[player_index] and storage.players[player_index].mode_index or 1]
+    return C.modes[get_or_init_player_settings(player_index).mode_index]
 end
 
 ---@param player_index integer
 ---@return Color?
 local function current_player_last_color(player_index)
-    return storage.players[player_index].last_color
+    return get_or_init_player_settings(player_index).last_color
 end
 
 ---@return integer[]
@@ -259,7 +276,7 @@ local function draw_light(player_index, rect, surface, mode, color)
 
     ---@type DiscoLight
     local light = {
-        mode = C.modes[storage.players[player_index].mode_index],
+        mode = current_player_mode(player_index),
         render_objects = { light_tiles = tiles, corners = corners, edit_gui = edit_gui, map_shapes = map_shapes, },
         surface = surface,
         color = color,
@@ -301,7 +318,7 @@ local function handle_selection(event, selection_type)
             storage.lights[i] = nil
         end
     elseif selection_type == "alt-select" then -- Open color picker
-         local player_settings = storage.players[event.player_index]
+        local player_settings = get_or_init_player_settings(event.player_index)
         local gui = player_settings.gui
         if not gui then
             gui = ColorPickerGui.new(event.player_index)
@@ -321,7 +338,7 @@ end
 
 ---@param enabled boolean
 local function enable_editting(player_index, enabled)
-    local player_settings = storage.players[player_index]
+    local player_settings = get_or_init_player_settings(player_index)
     if player_settings.editing == enabled then return end
     player_settings.editing = enabled
     apply_overlay_audience_to_all()
@@ -337,7 +354,7 @@ local function update_planner(player_index)
         local color = current_player_last_color(player_index) or {r=1, g=1, b=1,}
         cursor_stack.label = "[color=" .. color.r .. ",".. color.g .. "," .. color.b .. "]⬤[/color]" ..
             "\nRadius: " .. tostring(current_player_radius(player_index)) ..
-            "\nMode: " .. C.modes[storage.players[player_index].mode_index]
+            "\nMode: " .. current_player_mode(player_index)
     else
         enable_editting(player_index, false)
     end
@@ -346,15 +363,6 @@ end
 --- Events
 
 ---@param player_index integer
-local function init_player(player_index)
-    if storage.players[player_index] then return end
-    ---@type PlayerSettings
-    local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, editing = false, }
-    storage.players[player_index] = player_settings
-end
-
----@param player_index integer
----@
 local function hide_gui(player_index)
     local player_settings = storage.players[player_index]
     if not player_settings or not player_settings.gui then return end
@@ -371,16 +379,16 @@ script.on_init(function()
     storage.players = {}
     storage.last_id = 1
     for _, player in pairs(game.connected_players) do
-        init_player(player.index)
+        init_player_settings(player.index)
     end
 end)
 
 script.on_event(defines.events.on_player_created, function(event)
-    init_player(event.player_index)
+    init_player_settings(event.player_index)
 end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
-    init_player(event.player_index)
+    init_player_settings(event.player_index)
     update_planner(event.player_index)
 end)
 
@@ -445,7 +453,7 @@ end)
 
 script.on_event(defines.events.on_gui_click, function(event)
     local player_index = event.player_index
-    local gui = storage.players[player_index].gui
+    local gui = get_or_init_player_settings(player_index).gui
     if not gui then return end
     if event.element == gui.close_button then
         hide_gui(player_index)
@@ -453,8 +461,8 @@ script.on_event(defines.events.on_gui_click, function(event)
 end)
 
 script.on_event(defines.events.on_gui_closed, function(event)
-    local player_settings = storage.players[event.player_index]
-    if not player_settings or not player_settings.gui then return end
+    local player_settings = get_or_init_player_settings(event.player_index)
+    if not player_settings.gui then return end
     local frame = player_settings.gui.frame
     if event.element and frame.valid and event.element == frame then
         hide_gui(event.player_index)
@@ -463,17 +471,19 @@ end)
 
 script.on_event(defines.events.on_gui_value_changed, function(event)
     local player_index = event.player_index
-    local gui = storage.players[player_index].gui
+    local player_settings = get_or_init_player_settings(player_index)
+    local gui = player_settings.gui
     if not gui or not ColorPickerGui.contains_slider(gui, event.element) then return end
     local color = ColorPickerGui.color_from_sliders(gui)
     ColorPickerGui.update(gui, color)
-    storage.players[player_index].last_color = color
+    player_settings.last_color = color
     update_planner(player_index)
 end)
 
 script.on_event(defines.events.on_gui_text_changed, function (event)
     local player_index = event.player_index
-    local gui = storage.players[player_index].gui
+    local player_settings = get_or_init_player_settings(player_index)
+    local gui = player_settings.gui
     if not gui or not ColorPickerGui.contains_textfield(gui, event.element) then return end
     local color
     if event.element == gui.hex_textfield then
@@ -485,7 +495,7 @@ script.on_event(defines.events.on_gui_text_changed, function (event)
     end
 
     ColorPickerGui.update(gui, color, event.element)
-    storage.players[player_index].last_color = color
+    player_settings.last_color = color
     update_planner(player_index)
 end)
 
@@ -501,7 +511,7 @@ local function cycle_setting_and_update(event, setting_name, delta, list)
     if not player then return end
     local cursor_stack = player.cursor_stack
     if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == C.selection_tool_name then
-        local settings = storage.players[player_index]
+        local settings = get_or_init_player_settings(player_index)
         settings[setting_name] = U.cycle_index(settings[setting_name], delta, #list)
         update_planner(player_index)
     end
