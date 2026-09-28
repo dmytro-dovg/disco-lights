@@ -242,8 +242,9 @@ local function draw_light(player_index, rect, surface, mode, color)
         surface = surface,
     })
 
+    local mode_label_text = { "disco-lights.mode-label", { "disco-lights.mode-" .. current_player_mode(player_index) } }
     table.insert(edit_gui, R.draw_text {
-        text = "Mode: " .. current_player_mode(player_index),
+        text = mode_label_text,
         color = { 1, 1, 1, 1, },
         filled = true,
         vertical_alignment = "bottom",
@@ -251,8 +252,9 @@ local function draw_light(player_index, rect, surface, mode, color)
         target = { left + 1.2, top - 0.75, },
         surface = surface,
     })
+    local radius_label_text = { "disco-lights.radius-label", current_player_radius(player_index) }
     table.insert(edit_gui, R.draw_text {
-        text = "Radius: " .. current_player_radius(player_index) .. " tiles",
+        text = radius_label_text,
         color = { 1, 1, 1, 1, },
         filled = true,
         vertical_alignment = "top",

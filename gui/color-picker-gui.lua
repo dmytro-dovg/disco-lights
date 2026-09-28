@@ -42,7 +42,7 @@ function G.new(player_index)
     titlebar.add {
         type = "label",
         style = "frame_title",
-        caption = "Pick color",
+        caption = { "disco-lights.color-picker-title" },
         ignored_by_interaction = true,
     }
 
@@ -88,7 +88,7 @@ function G.new(player_index)
     spacer_1.style.horizontally_stretchable = true
     line_1.add {
         type = "label",
-        caption = "#",
+        caption = { "disco-lights.hex-label" },
     }
 
     -- Hex textfield
@@ -114,7 +114,7 @@ function G.new(player_index)
         flow.style.vertical_align = "center"
         flow.add {
             type = "label",
-            caption = component:upper()
+            caption = { "disco-lights.component-" .. component },
         }
         local slider = flow.add {
             type = "slider",

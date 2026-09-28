@@ -4,7 +4,6 @@ data:extend({
     {
         type = "selection-tool",
         name = C.selection_tool_name,
-        localised_name = "Disco lights tool",
         icon = "__disco-lights__/graphics/icons/planner.png",
         stack_size = 1,
         hidden = true,

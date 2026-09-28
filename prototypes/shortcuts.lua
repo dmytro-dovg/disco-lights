@@ -2,7 +2,6 @@ data:extend({
     {
         type = "shortcut",
         name = "give-disco-lights-tool",
-        localised_name = "Disco lights tool",
         action = "spawn-item",
         item_to_spawn = "disco-lights-tool",
         icon = "__disco-lights__/graphics/shortcut-toolbar/mip/shortcut_x56.png",
