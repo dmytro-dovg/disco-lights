@@ -83,6 +83,36 @@ local function current_player_last_color(player_index)
     return storage.players[player_index].last_color
 end
 
+---@return integer[]
+local function editing_players()
+    local list = {}
+    for player_index, settings in pairs(storage.players) do
+        if settings.editing then
+            table.insert(list, player_index)
+        end
+    end
+    return list
+end
+
+---@param light DiscoLight
+---@param audience integer[]
+local function apply_overlay_audience(light, audience)
+    local anyone = #audience > 0
+    for _, name in pairs({ "corners", "edit_gui", "map_shapes", }) do
+        modify_renders(light, name, function (object)
+            object.visible = anyone
+            object.players = anyone and audience or {}
+        end)
+    end
+end
+
+local function apply_overlay_audience_to_all()
+    local audience = editing_players()
+    for _, light in pairs(storage.lights) do
+        apply_overlay_audience(light, audience)
+    end
+end
+
 ---@param letters string[]
 ---@param leading number
 ---@param trailing number
@@ -237,6 +267,7 @@ local function draw_light(player_index, rect, surface, mode, color)
         phase = math.random() * 2 * math.pi,
         duration = 60 + math.random() * 10 * 60
     }
+    apply_overlay_audience(light, editing_players())
     storage.lights[storage.last_id] = light
     storage.last_id = storage.last_id + 1
 end
@@ -289,13 +320,7 @@ local function enable_editting(player_index, enabled)
     local player_settings = storage.players[player_index]
     if player_settings.editing == enabled then return end
     player_settings.editing = enabled
-    for _, light in pairs(storage.lights) do
-        for _, name in pairs({ "corners", "edit_gui", "map_shapes", }) do
-            modify_renders(light, name, function (object)
-                object.visible = enabled
-            end)
-        end
-    end
+    apply_overlay_audience_to_all()
 end
 
 ---@param player_index integer
@@ -345,11 +370,13 @@ end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
     init_player(event.player_index)
+    update_planner(event.player_index)
 end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
     hide_gui(event.player_index)
     storage.players[event.player_index] = nil
+    apply_overlay_audience_to_all()
 end)
 
 script.on_configuration_changed(function(event)
@@ -358,6 +385,7 @@ script.on_configuration_changed(function(event)
     for player_index, _ in pairs(storage.players) do
         hide_gui(player_index)
     end
+    apply_overlay_audience_to_all()
 end)
 
 script.on_event("clear-disco-lights", function(event)
