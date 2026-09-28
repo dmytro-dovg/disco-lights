@@ -462,7 +462,7 @@ script.on_event(defines.events.on_gui_text_changed, function (event)
     if event.element == gui.hex_textfield then
         local satintized_hex = U.sanitize_hex(event.text)
         gui.hex_textfield.text = satintized_hex
-        color = util.color(satintized_hex)
+        color = U.hex_to_color(satintized_hex)
     else
         color = ColorPickerGui.color_from_textfield(gui)
     end

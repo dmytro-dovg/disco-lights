@@ -60,6 +60,27 @@ function U.color_to_bytes(color)
     }
 end
 
+---@param r number
+---@param g number
+---@param b number
+---@return Color
+function U.color_from_bytes(r, g, b)
+    return {
+        r = U.clamp_byte(r) / 255,
+        g = U.clamp_byte(g) / 255,
+        b = U.clamp_byte(b) / 255,
+        a = 1,
+    }
+end
+
+---@param hex string
+---@return Color
+function U.hex_to_color(hex)
+    local color = U.normalize_color(util.color(hex))
+    color.a = 1
+    return color
+end
+
 ---@param color Color
 ---@return string
 function U.color_to_hex(color)

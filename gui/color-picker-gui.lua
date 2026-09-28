@@ -184,25 +184,21 @@ end
 ---@param gui ColorPickerGui
 ---@return Color
 function G.color_from_sliders(gui)
-    return U.normalize_color {
-        r = gui.components.r.slider.slider_value,
-        g = gui.components.g.slider.slider_value,
-        b = gui.components.b.slider.slider_value,
-    }
+    return U.color_from_bytes(
+        gui.components.r.slider.slider_value,
+        gui.components.g.slider.slider_value,
+        gui.components.b.slider.slider_value
+    )
 end
 
 ---@param gui ColorPickerGui
 ---@return Color
 function G.color_from_textfield(gui)
-    local r_number = tonumber(gui.components.r.textfield.text) or 0
-    local g_number = tonumber(gui.components.g.textfield.text) or 0
-    local b_number = tonumber(gui.components.b.textfield.text) or 0
-
-    return U.normalize_color {
-        r = r_number <= 255 and r_number or 255,
-        g = g_number <= 255 and g_number or 255,
-        b = b_number <= 255 and b_number or 255,
-    }
+    return U.color_from_bytes(
+        tonumber(gui.components.r.textfield.text) or 0,
+        tonumber(gui.components.g.textfield.text) or 0,
+        tonumber(gui.components.b.textfield.text) or 0
+    )
 end
 
 return G
