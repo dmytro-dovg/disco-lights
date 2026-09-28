@@ -173,9 +173,9 @@ end
 ---@param gui ColorPickerGui
 ---@return Color
 function G.color_from_textfield(gui)
-    local r_number = tonumber(gui.components.r.textfield.text)
-    local g_number = tonumber(gui.components.g.textfield.text)
-    local b_number = tonumber(gui.components.b.textfield.text)
+    local r_number = tonumber(gui.components.r.textfield.text) or 0
+    local g_number = tonumber(gui.components.g.textfield.text) or 0
+    local b_number = tonumber(gui.components.b.textfield.text) or 0
 
     return U.normalize_color {
         r = r_number <= 255 and r_number or 255,
