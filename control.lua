@@ -470,7 +470,6 @@ script.on_event(defines.events.on_gui_text_changed, function (event)
     ColorPickerGui.update(gui, color, event.element)
     storage.players[player_index].last_color = color
     update_planner(player_index)
-    U.d(player_index, "Old: " .. event.element.text .. " New: " .. event.text)
 end)
 
 -- Inputs
