@@ -301,8 +301,8 @@ local function update_planner(player_index)
         enable_editting(true)
         local color = current_player_last_color(player_index) or {r=1, g=1, b=1,}
         cursor_stack.label = "[color=" .. color.r .. ",".. color.g .. "," .. color.b .. "]⬤[/color]" ..
-            "\nRadius: " .. tostring(current_player_radius(player_index) ..
-            "\nMode: " .. C.modes[storage.players[player_index].mode_index]) 
+            "\nRadius: " .. tostring(current_player_radius(player_index)) ..
+            "\nMode: " .. C.modes[storage.players[player_index].mode_index]
     else
         enable_editting(false)
     end
