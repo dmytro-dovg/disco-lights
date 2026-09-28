@@ -50,11 +50,11 @@ local function light_sprites(radius, filename)
 end
 
 for _, radius in pairs(C.radii) do
-    data.extend(light_sprites(radius, "__disco-lights__/graphics/light_" .. radius .. ".png"))
+    data:extend(light_sprites(radius, "__disco-lights__/graphics/light_" .. radius .. ".png"))
 end
 
 
-data.extend({
+data:extend({
     {
         type = "animation",
         name = C.sprites.spectrum_circle,

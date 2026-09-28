@@ -1,4 +1,4 @@
-data.extend({
+data:extend({
     {
         type = "custom-input",
         name = "clear-disco-lights",
