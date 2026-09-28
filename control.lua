@@ -309,6 +309,10 @@ local function handle_selection(event, selection_type)
         end
         if gui then
             ColorPickerGui.update(gui, player_settings.last_color)
+            local player = game.get_player(event.player_index)
+            if player then
+                player.opened = gui.frame
+            end
         end
     else
         -- not implemented
@@ -441,6 +445,15 @@ script.on_event(defines.events.on_gui_click, function(event)
     if not gui then return end
     if event.element == gui.close_button then
         hide_gui(player_index)
+    end
+end)
+
+script.on_event(defines.events.on_gui_closed, function(event)
+    local player_settings = storage.players[event.player_index]
+    if not player_settings or not player_settings.gui then return end
+    local frame = player_settings.gui.frame
+    if event.element and frame.valid and event.element == frame then
+        hide_gui(event.player_index)
     end
 end)
 
