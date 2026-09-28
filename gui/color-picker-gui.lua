@@ -161,6 +161,27 @@ function G.update(gui, color, element)
 end
 
 ---@param gui ColorPickerGui
+---@param element LuaGuiElement
+---@return boolean
+function G.contains_slider(gui, element)
+    for _, component in pairs(gui.components) do
+        if component.slider == element then return true end
+    end
+    return false
+end
+
+---@param gui ColorPickerGui
+---@param element LuaGuiElement
+---@return boolean
+function G.contains_textfield(gui, element)
+    if element == gui.hex_textfield then return true end
+    for _, component in pairs(gui.components) do
+        if component.textfield == element then return true end
+    end
+    return false
+end
+
+---@param gui ColorPickerGui
 ---@return Color
 function G.color_from_sliders(gui)
     return U.normalize_color {

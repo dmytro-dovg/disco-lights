@@ -435,7 +435,7 @@ end)
 script.on_event(defines.events.on_gui_value_changed, function(event)
     local player_index = event.player_index
     local gui = storage.players[player_index].gui
-    if not gui then return end
+    if not gui or not ColorPickerGui.contains_slider(gui, event.element) then return end
     local color = ColorPickerGui.color_from_sliders(gui)
     ColorPickerGui.update(gui, color)
     storage.players[player_index].last_color = color
@@ -445,7 +445,7 @@ end)
 script.on_event(defines.events.on_gui_text_changed, function (event)
     local player_index = event.player_index
     local gui = storage.players[player_index].gui
-    if not gui then return end
+    if not gui or not ColorPickerGui.contains_textfield(gui, event.element) then return end
     local color
     if event.element == gui.hex_textfield then
         local satintized_hex = U.sanitize_hex(event.text)
