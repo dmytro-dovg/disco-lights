@@ -322,7 +322,9 @@ end
 local function hide_gui(player_index)
     local gui = storage.players[player_index].gui
     if not gui then return end
-    gui.frame.destroy()
+    if gui.frame.valid then
+        gui.frame.destroy()
+    end
     storage.players[player_index].gui = nil
 end
 
