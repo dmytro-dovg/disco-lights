@@ -113,6 +113,16 @@ function U.d(player, msg, ...)
     end
 end
 
+---@param list any[]
+---@param value any
+---@return boolean
+function U.contains(list, value)
+    for _, item in pairs(list) do
+        if item == value then return true end
+    end
+    return false
+end
+
 ---@param current integer
 ---@param delta integer
 ---@param total integer

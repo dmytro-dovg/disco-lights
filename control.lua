@@ -21,6 +21,7 @@ local ColorPickerGui = require "gui.color-picker-gui"
 ---@field last_color Color
 ---@field editing boolean
 ---@field gui ColorPickerGui?
+---@field translations table<string, string>?
 
 ---@class ModStorage
 ---@field players table<integer, PlayerSettings>
@@ -242,7 +243,7 @@ local function draw_light(player_index, rect, surface, mode, color)
         surface = surface,
     })
 
-    local mode_label_text = { "disco-lights.mode-label", { "disco-lights.mode-" .. current_player_mode(player_index) } }
+    local mode_label_text = { C.locale.mode_label, { C.locale.mode(current_player_mode(player_index)) } }
     table.insert(edit_gui, R.draw_text {
         text = mode_label_text,
         color = { 1, 1, 1, 1, },
@@ -252,7 +253,7 @@ local function draw_light(player_index, rect, surface, mode, color)
         target = { left + 1.2, top - 0.75, },
         surface = surface,
     })
-    local radius_label_text = { "disco-lights.radius-label", current_player_radius(player_index) }
+    local radius_label_text = { C.locale.radius_label, current_player_radius(player_index) }
     table.insert(edit_gui, R.draw_text {
         text = radius_label_text,
         color = { 1, 1, 1, 1, },
@@ -346,6 +347,22 @@ local function enable_editting(player_index, enabled)
     apply_overlay_audience_to_all()
 end
 
+---@param player LuaPlayer
+local function request_cursor_label_translations(player)
+    get_or_init_player_settings(player.index).translations = {}
+    for _, key in pairs(C.cursor_label_keys) do
+        player.request_translation { key }
+    end
+end
+
+---@param settings PlayerSettings
+---@param key string
+---@param fallback string
+---@return string
+local function translated(settings, key, fallback)
+    return settings.translations and settings.translations[key] or fallback
+end
+
 ---@param player_index integer
 local function update_planner(player_index)
     local player = game.get_player(player_index)
@@ -353,14 +370,36 @@ local function update_planner(player_index)
     local cursor_stack = player.cursor_stack
     if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == C.selection_tool_name then
         enable_editting(player_index, true)
+        local settings = get_or_init_player_settings(player_index)
+        if not settings.translations then
+            request_cursor_label_translations(player)
+        end
         local color = current_player_last_color(player_index) or {r=1, g=1, b=1,}
+        local mode = current_player_mode(player_index)
         cursor_stack.label = "[color=" .. color.r .. ",".. color.g .. "," .. color.b .. "]⬤[/color]" ..
-            "\nRadius: " .. tostring(current_player_radius(player_index)) ..
-            "\nMode: " .. current_player_mode(player_index)
+            "\n" .. translated(settings, C.locale.cursor_radius, "") .. " " .. current_player_radius(player_index) ..
+            "\n" .. translated(settings, C.locale.cursor_mode, "") .. " " .. translated(settings, C.locale.mode(mode), mode)
     else
         enable_editting(player_index, false)
     end
 end
+
+script.on_event(defines.events.on_string_translated, function(event)
+    local localised = event.localised_string
+    if type(localised) ~= "table" or not U.contains(C.cursor_label_keys, localised[1]) then return end
+    if not event.translated then return end
+    local settings = storage.players[event.player_index]
+    if not settings then return end
+    settings.translations = settings.translations or {}
+    settings.translations[localised[1]] = event.result
+    update_planner(event.player_index)
+end)
+
+script.on_event(defines.events.on_player_locale_changed, function(event)
+    local player = game.get_player(event.player_index)
+    if not player then return end
+    request_cursor_label_translations(player)
+end)
 
 --- Events
 
@@ -425,8 +464,10 @@ end)
 script.on_configuration_changed(function(event)
     -- Close all open windows
     if not storage.players then return end
-    for player_index, _ in pairs(storage.players) do
+    for player_index, settings in pairs(storage.players) do
         hide_gui(player_index)
+        -- Invalidate translations
+        settings.translations = nil
     end
     apply_overlay_audience_to_all()
 end)

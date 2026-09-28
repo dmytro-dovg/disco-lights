@@ -30,6 +30,24 @@ C.modes = { "static", "spectrum", }
 ---@type number
 C.tiles_per_px = util.by_pixel(1, 1)[1]
 
+C.locale = {
+    mode_label = "disco-lights.mode-label",
+    radius_label = "disco-lights.radius-label",
+    cursor_radius = "disco-lights.cursor-radius",
+    cursor_mode = "disco-lights.cursor-mode",
+    ---@param mode Mode
+    ---@return string
+    mode = function (mode)
+        return "disco-lights.mode-" .. mode
+    end,
+}
+
+---@type string[]
+C.cursor_label_keys = { C.locale.cursor_radius, C.locale.cursor_mode, }
+for _, mode in pairs(C.modes) do
+    table.insert(C.cursor_label_keys, C.locale.mode(mode))
+end
+
 C.sprites = {
     cursors = {
         [1] = C.sprite_prefix .. "-cursor-box-small",
