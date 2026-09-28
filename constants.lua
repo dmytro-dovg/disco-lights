@@ -30,15 +30,6 @@ C.modes = { "static", "spectrum", }
 ---@type number
 C.tiles_per_px = util.by_pixel(1, 1)[1]
 
----@type table<SelectionType, number[]>
-C.selection_colors = {
-    ["select"] = { 1, 0, 0, 1 },
-    ["alt-select"] = { 0, 1, 0, 1 },
-    ["rev-select"] = { 0, 0, 1, 1 },
-    ["rev-alt-select"] = { 0, 0.5, 1, 1 },
-    ["super-select"] = { 1, 0, 1, 1 },
-}
-
 C.sprites = {
     cursors = {
         [1] = C.sprite_prefix .. "-cursor-box-small",
