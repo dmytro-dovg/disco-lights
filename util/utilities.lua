@@ -2,6 +2,8 @@ local C = require "constants"
 
 local U = {}
 
+---@param hue number
+---@return Color
 function U.hue_to_rgb(hue)
     local i = math.floor(hue * 6)
     local f = hue * 6 - i
@@ -20,6 +22,54 @@ function U.hue_to_rgb(hue)
     else
         return { r = 1, g = 0, b = q, }
     end
+end
+
+---@param color Color
+---@return Color
+function U.normalize_color(color)
+    local r = color.r or color[1] or 0
+    local g = color.g or color[2] or 0
+    local b = color.b or color[3] or 0
+    local a = color.a or color[4]
+    if r > 1 or g > 1 or b > 1 or (a and a > 1) then
+        r, g, b = r / 255, g / 255, b / 255
+        a = a and a / 255
+    end
+    return {
+        r = r,
+        g = g,
+        b = b,
+        a = a or 1
+    }
+end
+
+---@param value number
+---@return integer
+function U.clamp_byte(value)
+    return math.max(0, math.min(255, math.floor(value + 0.5)))
+end
+
+---@param color Color
+---@return Color
+function U.color_to_bytes(color)
+    local n = U.normalize_color(color)
+    return {
+        r = U.clamp_byte(n.r * 255),
+        g = U.clamp_byte(n.g * 255),
+        b = U.clamp_byte(n.b * 255)
+    }
+end
+
+---@param color Color
+---@return string
+function U.color_to_hex(color)
+    return string.format("%02X%02X%02X", color.r, color.g, color.b)
+end
+
+---@param text string
+---@return string
+function U.sanitize_hex(text)
+    return text:gsub("[^%x]", ""):upper():sub(1, 6)
 end
 
 ---@param player number?|LuaPlayer?
@@ -42,6 +92,10 @@ function U.d(player, msg, ...)
     end
 end
 
+---@param current integer
+---@param delta integer
+---@param total integer
+---@return integer
 function U.cycle_index(current, delta, total)
     return (current - 1 + delta) % total + 1
 end

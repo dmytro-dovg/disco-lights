@@ -2,6 +2,7 @@ local R = rendering
 local C = require "constants"
 local U = require "util.utilities"
 local Rect = require "util.rect"
+local ColorPickerGui = require "gui.color-picker-gui"
 
 ---@alias SelectionType "select"|"rev-select"|"alt-select"|"alt-rev-select"|"super-select"
 
@@ -17,6 +18,7 @@ local Rect = require "util.rect"
 ---@field radius_index integer
 ---@field mode_index integer
 ---@field last_color Color
+---@field gui ColorPickerGui?
 
 ---@class ModStorage
 ---@field players table<integer, PlayerSettings>
@@ -264,6 +266,16 @@ local function handle_selection(event, selection_type)
             destroy_light(storage.lights[i])
             storage.lights[i] = nil
         end
+    elseif selection_type == "alt-select" then -- Open color picker
+         local player_settings = storage.players[event.player_index]
+        local gui = player_settings.gui
+        if not gui then
+            gui = ColorPickerGui.new(event.player_index)
+            player_settings.gui = gui
+        end
+        if gui then
+            ColorPickerGui.update(gui, player_settings.last_color)
+        end
     else
         -- not implemented
     end
@@ -306,7 +318,7 @@ end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
     ---@type PlayerSettings
-    local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color }
+    local player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, }
     table.insert(storage.players, player_settings)
 end)
 
@@ -328,6 +340,47 @@ script.on_nth_tick(2, function(event)
             end)
         end
     end
+end)
+
+-- GUI events
+
+script.on_event(defines.events.on_gui_click, function(event)
+    local player_index = event.player_index
+    local gui = storage.players[player_index].gui
+    if not gui then return end
+    if event.element == gui.close_button then
+        gui.frame.destroy()
+        storage.players[player_index].gui = nil
+    end
+end)
+
+script.on_event(defines.events.on_gui_value_changed, function(event)
+    local player_index = event.player_index
+    local gui = storage.players[player_index].gui
+    if not gui then return end
+    local color = ColorPickerGui.color_from_sliders(gui)
+    ColorPickerGui.update(gui, color)
+    storage.players[player_index].last_color = color
+    update_planner(player_index)
+end)
+
+script.on_event(defines.events.on_gui_text_changed, function (event)
+    local player_index = event.player_index
+    local gui = storage.players[player_index].gui
+    if not gui then return end
+    local color
+    if event.element == gui.hex_textfield then
+        local satintized_hex = U.sanitize_hex(event.text)
+        gui.hex_textfield.text = satintized_hex
+        color = util.color(satintized_hex)
+    else
+        color = ColorPickerGui.color_from_textfield(gui)
+    end
+
+    ColorPickerGui.update(gui, color, event.element)
+    storage.players[player_index].last_color = color
+    update_planner(player_index)
+    U.d(player_index, "Old: " .. event.element.text .. " New: " .. event.text)
 end)
 
 -- Inputs

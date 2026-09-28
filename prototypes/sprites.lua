@@ -11,6 +11,7 @@ local cursor_boxes = {
 for i, name in pairs(cursor_boxes) do
     local spec = specs[i]
     if not spec.is_whole_box then
+        ---@type any
         local sprite = table.deepcopy(spec.sprite)
         sprite.type = "sprite"
         sprite.name = name
