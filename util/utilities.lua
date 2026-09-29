@@ -24,6 +24,25 @@ function U.hue_to_rgb(hue)
     end
 end
 
+---@class SpectrumCycle
+---@field phase number
+---@field duration number
+
+---@return SpectrumCycle
+function U.new_spectrum_cycle()
+    return {
+        phase = math.random(),
+        duration = 60 + math.random() * 10 * 60,
+    }
+end
+
+---@param tick integer
+---@param cycle SpectrumCycle
+---@return Color
+function U.spectrum_color(tick, cycle)
+    return U.hue_to_rgb((tick / cycle.duration + cycle.phase) % 1)
+end
+
 ---@param color Color
 ---@return Color
 function U.normalize_color(color)

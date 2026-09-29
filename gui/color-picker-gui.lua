@@ -1,5 +1,6 @@
 
 local U = require "util.utilities"
+local C = require "constants"
 
 local G = {}
 
@@ -8,11 +9,15 @@ local G = {}
 ---@field slider LuaGuiElement
 
 ---@class ColorPickerGui
+---@field type string
 ---@field frame LuaGuiElement
 ---@field close_button LuaGuiElement
----@field swatch LuaGuiElement
+---@field static_swatch LuaGuiElement
+---@field spectrum_swatch LuaGuiElement
 ---@field hex_textfield LuaGuiElement
+---@field tabbed_pane LuaGuiElement
 ---@field components { r: ComponentGui, g: ComponentGui, b: ComponentGui, }
+---@field cycle SpectrumCycle Drives the swatch preview while the player is in spectrum mode
 
 ---@param player_index integer
 ---@return ColorPickerGui?
@@ -66,38 +71,32 @@ function G.new(player_index)
         tooltip = {"gui.close-instruction"},
     }
 
-    local line_1 = frame.add {
-        type = "flow",
-        direction = "horizontal",
-    }
-    line_1.style.vertical_align = "center"
-
-    -- Color swatch
-    local swatch = line_1.add {
-        type = "progressbar",
-        name = "disco_swatch",
-        style = "disco-lights_color_indicator",
-        value = 1,
-    }
-    swatch.style.color = {r = 1, g = 1, b = 1}
-
-    local spacer_1 = line_1.add {
-        type = "empty-widget",
+    local contents = frame.add {
+        type = "frame",
+        style = "inside_shallow_frame",
     }
 
-    spacer_1.style.horizontally_stretchable = true
-    line_1.add {
-        type = "label",
-        caption = { "disco-lights.hex-label" },
+    local pane = contents.add {
+        type = "tabbed-pane",
     }
 
-    -- Hex textfield
-    local hex_textfield = line_1.add {
-        type = "textfield",
-        numeric = false,
-    }
-    hex_textfield.style.width = 64
-    hex_textfield.style.horizontal_align = "center"
+    local flows = {}
+    for _, mode in pairs(C.modes) do
+        local tab = pane.add {
+            type = "tab",
+            caption = { C.locale.mode(mode) },
+        }
+        local flow = pane.add {
+            type = "flow",
+            direction = "vertical",
+        }
+        flow.style.left_margin = 8
+        flow.style.right_margin = 8
+        pane.add_tab(tab, flow)
+        flows[mode] = flow
+    end
+
+    -- Static
 
     -- Sliders
     local components = {}
@@ -107,7 +106,7 @@ function G.new(player_index)
         b = "blue_slider",
     }
     for _, component in pairs({ 'r', 'g', 'b', }) do
-        local flow = frame.add {
+        local flow = flows.static.add {
             type = "flow",
             direction = "horizontal",
         }
@@ -136,12 +135,56 @@ function G.new(player_index)
         components[component] = { slider = slider, textfield = textfield, }
     end
 
+
+    -- Hex color
+    local hex_line = flows.static.add {
+        type = "flow",
+        direction = "horizontal",
+    }
+    hex_line.style.vertical_align = "center"
+
+    -- Color swatch
+    local static_swatch = hex_line.add {
+        type = "progressbar",
+        style = "disco-lights_color_indicator",
+        value = 1,
+    }
+    static_swatch.style.color = {r = 1, g = 1, b = 1}
+
+    local spacer_1 = hex_line.add {
+        type = "empty-widget",
+    }
+
+    spacer_1.style.horizontally_stretchable = true
+    hex_line.add {
+        type = "label",
+        caption = { "disco-lights.hex-label" },
+    }
+    local hex_textfield = hex_line.add {
+        type = "textfield",
+        numeric = false,
+    }
+    hex_textfield.style.width = 64
+    hex_textfield.style.horizontal_align = "center"
+
+    -- Spectrum
+    -- Color swatch
+    local spectrum_swatch = flows.spectrum.add {
+        type = "progressbar",
+        style = "disco-lights_color_indicator",
+        value = 1,
+    }
+    spectrum_swatch.style.color = {r = 1, g = 1, b = 1}
     return {
+        type = "color-picker-gui",
         frame = outer,
         close_button = close_button,
-        swatch = swatch,
+        static_swatch = static_swatch,
+        spectrum_swatch = spectrum_swatch,
         hex_textfield = hex_textfield,
-        components = components
+        tabbed_pane = pane,
+        components = components,
+        cycle = U.new_spectrum_cycle(),
     }
 end
 
@@ -149,7 +192,7 @@ end
 ---@param color Color
 ---@parame element LuaGuiElement?
 function G.update(gui, color, element)
-    gui.swatch.style.color = color
+    gui.static_swatch.style.color = color
     local bytes_color = U.color_to_bytes(color)
     for key, component in pairs(gui.components) do
         component.slider.slider_value = bytes_color[key]
@@ -158,6 +201,12 @@ function G.update(gui, color, element)
     if gui.hex_textfield ~= element then
         gui.hex_textfield.text = U.color_to_hex(bytes_color)
     end
+end
+
+---@param gui ColorPickerGui
+---@param color Color
+function G.update_spectrum_swatch(gui, color)
+    gui.spectrum_swatch.style.color = color
 end
 
 ---@param gui ColorPickerGui
@@ -199,6 +248,12 @@ function G.color_from_textfield(gui)
         tonumber(gui.components.g.textfield.text) or 0,
         tonumber(gui.components.b.textfield.text) or 0
     )
+end
+
+---@param gui ColorPickerGui
+---@param mode_index integer
+function G.select_mode(gui, mode_index)
+    gui.tabbed_pane.selected_tab_index = mode_index
 end
 
 return G

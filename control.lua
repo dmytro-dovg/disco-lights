@@ -10,8 +10,7 @@ local ColorPickerGui = require "gui.color-picker-gui"
 ---@field render_objects { light_tiles: LuaRenderObject[], corners: LuaRenderObject[], edit_gui: LuaRenderObject[], map_shapes: LuaRenderObject[] }
 ---@field surface LuaSurface
 ---@field color Color?
----@field phase float
----@field duration integer
+---@field cycle SpectrumCycle
 ---@field rect Rect
 ---@field mode Mode
 
@@ -284,8 +283,7 @@ local function draw_light(player_index, rect, surface, mode, color)
         surface = surface,
         color = color,
         rect = Rect.new(left, top, width, height),
-        phase = math.random() * 2 * math.pi,
-        duration = 60 + math.random() * 10 * 60
+        cycle = U.new_spectrum_cycle(),
     }
     apply_overlay_audience(light, editing_players())
     storage.lights[storage.last_id] = light
@@ -329,6 +327,7 @@ local function handle_selection(event, selection_type)
         end
         if gui then
             ColorPickerGui.update(gui, player_settings.last_color)
+            ColorPickerGui.select_mode(gui, player_settings.mode_index)
             local player = game.get_player(event.player_index)
             if player then
                 player.opened = gui.frame
@@ -479,8 +478,7 @@ end)
 script.on_nth_tick(2, function(event)
     for _, light in pairs(storage.lights) do
         if light.mode == "spectrum" then
-            local base = event.tick / light.duration
-            local color = U.hue_to_rgb((base + (light.phase or 0)) % 1)
+            local color = U.spectrum_color(event.tick, light.cycle)
             modify_renders(light, "light_tiles", function (object)
                 object.color = color
             end)
@@ -488,6 +486,13 @@ script.on_nth_tick(2, function(event)
             modify_renders(light, "map_shapes", function (object)
                 object.color = color
             end)
+        end
+    end
+
+    for player_index, player_settings in pairs(storage.players) do
+        local gui = player_settings.gui
+        if gui and gui.frame.valid and current_player_mode(player_index) == "spectrum" then
+            ColorPickerGui.update_spectrum_swatch(gui, U.spectrum_color(event.tick, gui.cycle))
         end
     end
 end)
@@ -542,6 +547,15 @@ script.on_event(defines.events.on_gui_text_changed, function (event)
     update_planner(player_index)
 end)
 
+script.on_event(defines.events.on_gui_selected_tab_changed, function (event)
+    local player_index = event.player_index
+    local player_settings = get_or_init_player_settings(player_index)
+    local gui = player_settings.gui
+    if not gui or event.element ~= gui.tabbed_pane then return end
+    player_settings.mode_index = event.element.selected_tab_index
+    update_planner(player_index)
+end)
+
 -- Inputs
 
 ---@param event EventData.CustomInputEvent
@@ -557,6 +571,10 @@ local function cycle_setting_and_update(event, setting_name, delta, list)
         local settings = get_or_init_player_settings(player_index)
         settings[setting_name] = U.cycle_index(settings[setting_name], delta, #list)
         update_planner(player_index)
+        local gui = settings.gui
+        if gui and gui.frame.valid then
+            ColorPickerGui.select_mode(gui, settings.mode_index)
+        end
     end
 end
 
