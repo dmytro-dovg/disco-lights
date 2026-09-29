@@ -372,6 +372,17 @@ local function translated(settings, key, fallback)
 end
 
 ---@param player_index integer
+local function print_usage(player_index)
+    local player = game.get_player(player_index)
+    if not player then return end
+
+    local cursor_stack = player.cursor_stack
+    if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == C.selection_tool_name then
+        player.print({ "disco-lights.usage" }, { skip = defines.print_skip.if_visible, sound = defines.print_sound.never })
+    end
+end
+
+---@param player_index integer
 local function update_planner(player_index)
     local player = game.get_player(player_index)
     if not player then return end
@@ -627,6 +638,7 @@ end)
 
 script.on_event(defines.events.on_player_cursor_stack_changed, function(event)
     update_planner(event.player_index)
+    print_usage(event.player_index)
 end)
 
 script.on_event(defines.events.on_player_selected_area, function(event)

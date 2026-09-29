@@ -40,6 +40,7 @@ C.locale = {
     mode_label = "disco-lights.mode-label",
     radius_label = "disco-lights.radius-label",
     picker_radius = "disco-lights.picker-radius",
+    picker_radius_tooltip = "disco-lights.picker-radius-tooltip",
     cursor_radius = "disco-lights.cursor-radius",
     cursor_mode = "disco-lights.cursor-mode",
     ---@param mode Mode

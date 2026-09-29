@@ -24,8 +24,9 @@ local G = {}
 ---@param parent LuaGuiElement
 ---@param caption LocalisedString
 ---@param slider_params table
+---@param tooltip LocalisedString?
 ---@return ComponentGui
-local function add_component_row(parent, caption, slider_params)
+local function add_component_row(parent, caption, slider_params, tooltip)
     local row = parent.add {
         type = "flow",
         direction = "horizontal",
@@ -34,8 +35,9 @@ local function add_component_row(parent, caption, slider_params)
     row.add {
         type = "label",
         caption = caption,
+        tooltip = tooltip,
     }
-    local params = { type = "slider", }
+    local params = { type = "slider", tooltip = tooltip, }
     for key, value in pairs(slider_params) do
         params[key] = value
     end
@@ -47,6 +49,7 @@ local function add_component_row(parent, caption, slider_params)
     local textfield = row.add {
         type = "textfield",
         numeric = true,
+        tooltip = tooltip,
     }
     textfield.style.width = 64
     textfield.style.horizontal_align = "center"
@@ -121,6 +124,7 @@ function G.new(player_index)
     radius_flow.add {
         type = "label",
         caption = { C.locale.picker_radius },
+        tooltip = { C.locale.picker_radius_tooltip },
     }
     local radius_slider = radius_flow.add {
         type = "slider",
@@ -128,6 +132,7 @@ function G.new(player_index)
         maximum_value = #C.radii,
         discrete_values = true,
         style = "notched_slider",
+        tooltip = { C.locale.picker_radius_tooltip },
     }
     radius_slider.style.left_margin = 8
     radius_slider.style.right_margin = 8
@@ -220,7 +225,7 @@ function G.new(player_index)
             value = limits.default,
             value_step = 1,
             discrete_values = true,
-        })
+        }, { "disco-lights.spectrum-" .. parameter .. "-tooltip" })
     end
     local spacer_2 = flows.spectrum.add {
         type = "empty-widget",
