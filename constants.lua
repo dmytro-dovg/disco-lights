@@ -4,8 +4,8 @@ local C = {}
 ---@alias Mode "static"|"spectrum"
 
 C.debug = {
-    logging_enabled = true,
-    log_in_game = true,
+    logging_enabled = false,
+    log_in_game = false,
 }
 
 ---@type string
