@@ -128,7 +128,7 @@ function U.d(player, msg, ...)
             player_object = player
         end
         if not player_object then return end
-        player_object.print(message)
+        player_object.print(message, { sound = defines.print_sound.never, })
     end
 end
 
