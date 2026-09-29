@@ -30,6 +30,12 @@ C.modes = { "static", "spectrum", }
 ---@type number
 C.tiles_per_px = util.by_pixel(1, 1)[1]
 
+--- Spectrum cycle limits and defaults
+C.spectrum = {
+    phase = { min = 0, max = 359, default = 0, },
+    duration = { min = 1, max = 60, default = 5, },
+}
+
 C.locale = {
     mode_label = "disco-lights.mode-label",
     radius_label = "disco-lights.radius-label",

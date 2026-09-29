@@ -19,6 +19,7 @@ local ColorPickerGui = require "gui.color-picker-gui"
 ---@field mode_index integer
 ---@field last_color Color
 ---@field editing boolean
+---@field spectrum SpectrumCycle
 ---@field gui ColorPickerGui?
 ---@field translations table<string, string>?
 
@@ -70,7 +71,13 @@ end
 local function init_player_settings(player_index)
     local player_settings = storage.players[player_index]
     if not player_settings then
-        player_settings = { radius_index = 1, mode_index = 1, last_color = C.colors.default_color, editing = false, }
+        player_settings = {
+            radius_index = 1,
+            mode_index = 1,
+            last_color = C.colors.default_color,
+            editing = false,
+            spectrum = { phase = C.spectrum.phase.default, duration = C.spectrum.duration.default, },
+        }
         storage.players[player_index] = player_settings
     end
     return player_settings
@@ -283,7 +290,7 @@ local function draw_light(player_index, rect, surface, mode, color)
         surface = surface,
         color = color,
         rect = Rect.new(left, top, width, height),
-        cycle = U.new_spectrum_cycle(),
+        cycle = table.deepcopy(get_or_init_player_settings(player_index).spectrum),
     }
     apply_overlay_audience(light, editing_players())
     storage.lights[storage.last_id] = light
@@ -327,6 +334,7 @@ local function handle_selection(event, selection_type)
         end
         if gui then
             ColorPickerGui.update(gui, player_settings.last_color)
+            ColorPickerGui.update_spectrum(gui, player_settings.spectrum)
             ColorPickerGui.select_mode(gui, player_settings.mode_index)
             local player = game.get_player(event.player_index)
             if player then
@@ -492,7 +500,7 @@ script.on_nth_tick(2, function(event)
     for player_index, player_settings in pairs(storage.players) do
         local gui = player_settings.gui
         if gui and gui.frame.valid and current_player_mode(player_index) == "spectrum" then
-            ColorPickerGui.update_spectrum_swatch(gui, U.spectrum_color(event.tick, gui.cycle))
+            ColorPickerGui.update_spectrum_swatch(gui, U.spectrum_color(event.tick, player_settings.spectrum))
         end
     end
 end)
@@ -521,30 +529,41 @@ script.on_event(defines.events.on_gui_value_changed, function(event)
     local player_index = event.player_index
     local player_settings = get_or_init_player_settings(player_index)
     local gui = player_settings.gui
-    if not gui or not ColorPickerGui.contains_slider(gui, event.element) then return end
-    local color = ColorPickerGui.color_from_sliders(gui)
-    ColorPickerGui.update(gui, color)
-    player_settings.last_color = color
-    update_planner(player_index)
+    if not gui then return end
+    if ColorPickerGui.contains_slider(gui, event.element) then
+        local color = ColorPickerGui.color_from_sliders(gui)
+        ColorPickerGui.update(gui, color)
+        player_settings.last_color = color
+        update_planner(player_index)
+    elseif ColorPickerGui.contains_spectrum_slider(gui, event.element) then
+        local spectrum = ColorPickerGui.spectrum_from_sliders(gui)
+        ColorPickerGui.update_spectrum(gui, spectrum)
+        player_settings.spectrum = spectrum
+    end
 end)
 
 script.on_event(defines.events.on_gui_text_changed, function (event)
     local player_index = event.player_index
     local player_settings = get_or_init_player_settings(player_index)
     local gui = player_settings.gui
-    if not gui or not ColorPickerGui.contains_textfield(gui, event.element) then return end
-    local color
-    if event.element == gui.hex_textfield then
-        local satintized_hex = U.sanitize_hex(event.text)
-        gui.hex_textfield.text = satintized_hex
-        color = U.hex_to_color(satintized_hex)
-    else
-        color = ColorPickerGui.color_from_textfield(gui)
+    if not gui then return end
+    if ColorPickerGui.contains_textfield(gui, event.element) then
+        local color
+        if event.element == gui.hex_textfield then
+            local satintized_hex = U.sanitize_hex(event.text)
+            gui.hex_textfield.text = satintized_hex
+            color = U.hex_to_color(satintized_hex)
+        else
+            color = ColorPickerGui.color_from_textfield(gui)
+        end
+        ColorPickerGui.update(gui, color, event.element)
+        player_settings.last_color = color
+        update_planner(player_index)
+    elseif ColorPickerGui.contains_spectrum_textfield(gui, event.element) then
+        local spectrum = ColorPickerGui.spectrum_from_textfields(gui)
+        ColorPickerGui.update_spectrum(gui, spectrum, event.element)
+        player_settings.spectrum = spectrum
     end
-
-    ColorPickerGui.update(gui, color, event.element)
-    player_settings.last_color = color
-    update_planner(player_index)
 end)
 
 script.on_event(defines.events.on_gui_selected_tab_changed, function (event)

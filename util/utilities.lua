@@ -28,19 +28,19 @@ end
 ---@field phase number
 ---@field duration number
 
----@return SpectrumCycle
-function U.new_spectrum_cycle()
-    return {
-        phase = math.random(),
-        duration = 60 + math.random() * 10 * 60,
-    }
+---@param value number
+---@param min number
+---@param max number
+---@return number
+function U.clamp(value, min, max)
+    return math.max(min, math.min(max, value))
 end
 
 ---@param tick integer
 ---@param cycle SpectrumCycle
 ---@return Color
 function U.spectrum_color(tick, cycle)
-    return U.hue_to_rgb((tick / cycle.duration + cycle.phase) % 1)
+    return U.hue_to_rgb((tick / (cycle.duration * 60) + cycle.phase / 360) % 1)
 end
 
 ---@param color Color

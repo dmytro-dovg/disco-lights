@@ -17,7 +17,39 @@ local G = {}
 ---@field hex_textfield LuaGuiElement
 ---@field tabbed_pane LuaGuiElement
 ---@field components { r: ComponentGui, g: ComponentGui, b: ComponentGui, }
----@field cycle SpectrumCycle Drives the swatch preview while the player is in spectrum mode
+---@field spectrum_components { phase: ComponentGui, duration: ComponentGui, }
+
+---@param parent LuaGuiElement
+---@param caption LocalisedString
+---@param slider_params table
+---@return ComponentGui
+local function add_component_row(parent, caption, slider_params)
+    local row = parent.add {
+        type = "flow",
+        direction = "horizontal",
+    }
+    row.style.vertical_align = "center"
+    row.add {
+        type = "label",
+        caption = caption,
+    }
+    local params = { type = "slider", }
+    for key, value in pairs(slider_params) do
+        params[key] = value
+    end
+    local slider = row.add(params)
+    slider.style.left_margin = 8
+    slider.style.right_margin = 8
+    slider.style.horizontally_stretchable = true
+
+    local textfield = row.add {
+        type = "textfield",
+        numeric = true,
+    }
+    textfield.style.width = 64
+    textfield.style.horizontal_align = "center"
+    return { slider = slider, textfield = textfield, }
+end
 
 ---@param player_index integer
 ---@return ColorPickerGui?
@@ -106,33 +138,12 @@ function G.new(player_index)
         b = "blue_slider",
     }
     for _, component in pairs({ 'r', 'g', 'b', }) do
-        local flow = flows.static.add {
-            type = "flow",
-            direction = "horizontal",
-        }
-        flow.style.vertical_align = "center"
-        flow.add {
-            type = "label",
-            caption = { "disco-lights.component-" .. component },
-        }
-        local slider = flow.add {
-            type = "slider",
-            name = prefix .. "slider_" .. component,
+        components[component] = add_component_row(flows.static, { "disco-lights.component-" .. component }, {
             style = slider_styles[component],
             minimum_value = 0,
             maximum_value = 255,
             value = 255,
-        }
-        slider.style.left_margin = 8
-        slider.style.right_margin = 8
-
-        local textfield = flow.add {
-            type = "textfield",
-            numeric = true,
-        }
-        textfield.style.width = 64
-        textfield.style.horizontal_align = "center"
-        components[component] = { slider = slider, textfield = textfield, }
+        })
     end
 
 
@@ -168,6 +179,22 @@ function G.new(player_index)
     hex_textfield.style.horizontal_align = "center"
 
     -- Spectrum
+    -- Cycle parameters
+    local spectrum_components = {}
+    for _, parameter in pairs({ "phase", "duration", }) do
+        local limits = C.spectrum[parameter]
+        spectrum_components[parameter] = add_component_row(flows.spectrum, { "disco-lights.spectrum-" .. parameter }, {
+            minimum_value = limits.min,
+            maximum_value = limits.max,
+            value = limits.default,
+            value_step = 1,
+            discrete_values = true,
+        })
+    end
+    local spacer_2 = flows.spectrum.add {
+        type = "empty-widget",
+    }
+    spacer_2.style.vertically_stretchable = true
     -- Color swatch
     local spectrum_swatch = flows.spectrum.add {
         type = "progressbar",
@@ -175,6 +202,7 @@ function G.new(player_index)
         value = 1,
     }
     spectrum_swatch.style.color = {r = 1, g = 1, b = 1}
+
     return {
         type = "color-picker-gui",
         frame = outer,
@@ -184,7 +212,7 @@ function G.new(player_index)
         hex_textfield = hex_textfield,
         tabbed_pane = pane,
         components = components,
-        cycle = U.new_spectrum_cycle(),
+        spectrum_components = spectrum_components,
     }
 end
 
@@ -210,11 +238,33 @@ function G.update_spectrum_swatch(gui, color)
 end
 
 ---@param gui ColorPickerGui
+---@param cycle SpectrumCycle
+---@param element LuaGuiElement?
+function G.update_spectrum(gui, cycle, element)
+    for key, component in pairs(gui.spectrum_components) do
+        component.slider.slider_value = cycle[key]
+        if component.textfield ~= element or tonumber(component.textfield.text) ~= cycle[key] then
+            component.textfield.text = tostring(cycle[key])
+        end
+    end
+end
+
+---@param components table<string, ComponentGui>
 ---@param element LuaGuiElement
 ---@return boolean
-function G.contains_slider(gui, element)
-    for _, component in pairs(gui.components) do
+local function contains_slider(components, element)
+    for _, component in pairs(components) do
         if component.slider == element then return true end
+    end
+    return false
+end
+
+---@param components table<string, ComponentGui>
+---@param element LuaGuiElement
+---@return boolean
+local function contains_textfield(components, element)
+    for _, component in pairs(components) do
+        if component.textfield == element then return true end
     end
     return false
 end
@@ -222,12 +272,29 @@ end
 ---@param gui ColorPickerGui
 ---@param element LuaGuiElement
 ---@return boolean
+function G.contains_slider(gui, element)
+    return contains_slider(gui.components, element)
+end
+
+---@param gui ColorPickerGui
+---@param element LuaGuiElement
+---@return boolean
 function G.contains_textfield(gui, element)
-    if element == gui.hex_textfield then return true end
-    for _, component in pairs(gui.components) do
-        if component.textfield == element then return true end
-    end
-    return false
+    return element == gui.hex_textfield or contains_textfield(gui.components, element)
+end
+
+---@param gui ColorPickerGui
+---@param element LuaGuiElement
+---@return boolean
+function G.contains_spectrum_slider(gui, element)
+    return contains_slider(gui.spectrum_components, element)
+end
+
+---@param gui ColorPickerGui
+---@param element LuaGuiElement
+---@return boolean
+function G.contains_spectrum_textfield(gui, element)
+    return contains_textfield(gui.spectrum_components, element)
 end
 
 ---@param gui ColorPickerGui
@@ -248,6 +315,26 @@ function G.color_from_textfield(gui)
         tonumber(gui.components.g.textfield.text) or 0,
         tonumber(gui.components.b.textfield.text) or 0
     )
+end
+
+---@param gui ColorPickerGui
+---@return SpectrumCycle
+function G.spectrum_from_sliders(gui)
+    return {
+        phase = gui.spectrum_components.phase.slider.slider_value,
+        duration = gui.spectrum_components.duration.slider.slider_value,
+    }
+end
+
+---@param gui ColorPickerGui
+---@return SpectrumCycle
+function G.spectrum_from_textfields(gui)
+    local cycle = {}
+    for key, component in pairs(gui.spectrum_components) do
+        local limits = C.spectrum[key]
+        cycle[key] = U.clamp(tonumber(component.textfield.text) or limits.min, limits.min, limits.max)
+    end
+    return cycle
 end
 
 ---@param gui ColorPickerGui
