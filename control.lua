@@ -496,15 +496,31 @@ script.on_event("clear-disco-lights", function(event)
 end)
 
 script.on_nth_tick(2, function(event)
+    ---@type table<string, { light: Color, map: Color }>
+    local colors = {}
+    ---@param cycle SpectrumCycle
+    local function colors_for(cycle)
+        local key = cycle.phase .. ":" .. cycle.duration
+        local cached = colors[key]
+        if not cached then
+            local color = U.spectrum_color(event.tick, cycle)
+            cached = {
+                light = color,
+                map = { r = color.r, g = color.g, b = color.b, a = C.map_alpha, },
+            }
+            colors[key] = cached
+        end
+        return cached
+    end
+
     for _, light in pairs(storage.lights) do
         if light.mode == "spectrum" then
-            local color = U.spectrum_color(event.tick, light.cycle)
+            local cached = colors_for(light.cycle)
             modify_renders(light, "light_tiles", function (object)
-                object.color = color
+                object.color = cached.light
             end)
-            color.a = C.map_alpha
             modify_renders(light, "map_shapes", function (object)
-                object.color = color
+                object.color = cached.map
             end)
         end
     end
@@ -512,7 +528,7 @@ script.on_nth_tick(2, function(event)
     for player_index, player_settings in pairs(storage.players) do
         local gui = player_settings.gui
         if gui and gui.frame.valid and current_player_mode(player_index) == "spectrum" then
-            ColorPickerGui.update_spectrum_swatch(gui, U.spectrum_color(event.tick, player_settings.spectrum))
+            ColorPickerGui.update_spectrum_swatch(gui, colors_for(player_settings.spectrum).light)
         end
     end
 end)
