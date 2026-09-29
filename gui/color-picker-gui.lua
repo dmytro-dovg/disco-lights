@@ -18,6 +18,8 @@ local G = {}
 ---@field tabbed_pane LuaGuiElement
 ---@field components { r: ComponentGui, g: ComponentGui, b: ComponentGui, }
 ---@field spectrum_components { phase: ComponentGui, duration: ComponentGui, }
+---@field radius_slider LuaGuiElement
+---@field radius_label LuaGuiElement
 
 ---@param parent LuaGuiElement
 ---@param caption LocalisedString
@@ -106,7 +108,36 @@ function G.new(player_index)
     local contents = frame.add {
         type = "frame",
         style = "inside_shallow_frame",
+        direction = "vertical",
     }
+
+    local radius_flow = contents.add {
+        type = "flow",
+        direction = "horizontal",
+    }
+    radius_flow.style.margin = 16
+    radius_flow.style.bottom_margin = 8
+    radius_flow.style.vertical_align = "center"
+    radius_flow.add {
+        type = "label",
+        caption = { C.locale.picker_radius },
+    }
+    local radius_slider = radius_flow.add {
+        type = "slider",
+        minimum_value = 1,
+        maximum_value = #C.radii,
+        discrete_values = true,
+        style = "notched_slider",
+    }
+    radius_slider.style.left_margin = 8
+    radius_slider.style.right_margin = 8
+    radius_slider.style.horizontally_stretchable = true
+
+    local radius_label = radius_flow.add {
+        type = "label",
+    }
+    radius_label.style.width = 16
+    radius_label.style.horizontal_align = "center"
 
     local pane = contents.add {
         type = "tabbed-pane",
@@ -213,6 +244,8 @@ function G.new(player_index)
         tabbed_pane = pane,
         components = components,
         spectrum_components = spectrum_components,
+        radius_slider = radius_slider,
+        radius_label = radius_label,
     }
 end
 
@@ -341,6 +374,19 @@ end
 ---@param mode_index integer
 function G.select_mode(gui, mode_index)
     gui.tabbed_pane.selected_tab_index = mode_index
+end
+
+---@param gui ColorPickerGui
+---@param radius_index integer
+function G.update_radius(gui, radius_index)
+    gui.radius_slider.slider_value = radius_index
+    gui.radius_label.caption = tostring(C.radii[radius_index])
+end
+
+---@param gui ColorPickerGui
+---@return integer
+function G.radius_index_from_slider(gui)
+    return math.floor(gui.radius_slider.slider_value + 0.5)
 end
 
 return G

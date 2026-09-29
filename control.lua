@@ -335,6 +335,7 @@ local function handle_selection(event, selection_type)
         if gui then
             ColorPickerGui.update(gui, player_settings.last_color)
             ColorPickerGui.update_spectrum(gui, player_settings.spectrum)
+            ColorPickerGui.update_radius(gui, player_settings.radius_index)
             ColorPickerGui.select_mode(gui, player_settings.mode_index)
             local player = game.get_player(event.player_index)
             if player then
@@ -539,6 +540,10 @@ script.on_event(defines.events.on_gui_value_changed, function(event)
         local spectrum = ColorPickerGui.spectrum_from_sliders(gui)
         ColorPickerGui.update_spectrum(gui, spectrum)
         player_settings.spectrum = spectrum
+    elseif event.element == gui.radius_slider then
+        player_settings.radius_index = ColorPickerGui.radius_index_from_slider(gui)
+        ColorPickerGui.update_radius(gui, player_settings.radius_index)
+        update_planner(player_index)
     end
 end)
 
@@ -593,6 +598,7 @@ local function cycle_setting_and_update(event, setting_name, delta, list)
         local gui = settings.gui
         if gui and gui.frame.valid then
             ColorPickerGui.select_mode(gui, settings.mode_index)
+            ColorPickerGui.update_radius(gui, settings.radius_index)
         end
     end
 end

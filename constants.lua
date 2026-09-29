@@ -39,6 +39,7 @@ C.spectrum = {
 C.locale = {
     mode_label = "disco-lights.mode-label",
     radius_label = "disco-lights.radius-label",
+    picker_radius = "disco-lights.picker-radius",
     cursor_radius = "disco-lights.cursor-radius",
     cursor_mode = "disco-lights.cursor-mode",
     ---@param mode Mode
