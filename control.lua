@@ -331,7 +331,7 @@ end
 ---@param event any
 ---@param selection_type SelectionType
 local function handle_selection(event, selection_type)
-    if event.item ~= "disco-lights-tool" then return end
+    if event.item ~= C.selection_tool_name then return end
 
     U.d(event.player_index, "Selection: %s", selection_type)
 
