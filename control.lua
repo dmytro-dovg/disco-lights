@@ -42,6 +42,14 @@ local function modify_renders(light, group_name, transform)
     end
 end
 
+---@param objects LuaRenderObject[]
+---@param color Color
+local function set_color(objects, color)
+    for i = 1, #objects do
+        objects[i].color = color
+    end
+end
+
 ---@param light DiscoLight
 ---@param group_name string Render object group
 local function destroy_renders(light, group_name)
@@ -175,19 +183,48 @@ local function draw_light(player_index, rect, surface, mode, color)
     local horizontal_count = width
     local vertical_count = height
 
+    local cycle = table.deepcopy(get_or_init_player_settings(player_index).spectrum)
+    local tint = color
+    if mode == "spectrum" then
+        tint = U.spectrum_color(game.tick, cycle)
+    end
+
+    local frame_count = C.spectrum_animation.frame_count
+    ---@param band { letter: string, scale: number }
+    local function spectrum_band_scale(band)
+        if band.letter == "m" then
+            return band.scale / C.spectrum_animation.scale
+        end
+        return band.scale
+    end
+
     for _, row in ipairs(sprite_bands(C.sprite_row_letters, top, bottom, radius, vertical_count)) do
         for _, column in ipairs(sprite_bands(C.sprite_column_letters, left, right, radius, horizontal_count)) do
             if row.scale > 0 and column.scale > 0 then
-                table.insert(tiles, R.draw_sprite {
-                    sprite = C.sprites.light(radius, row.letter, column.letter),
-                    surface = surface,
-                    x_scale = column.scale,
-                    y_scale = row.scale,
-                    render_layer = "light-effect",
-                    light_mode = "light",
-                    target = { column.center, row.center, },
-                    tint = color
-                })
+                if mode == "spectrum" then
+                    table.insert(tiles, R.draw_animation {
+                        animation = C.sprites.spectrum_light(radius, row.letter, column.letter),
+                        surface = surface,
+                        x_scale = spectrum_band_scale(column),
+                        y_scale = spectrum_band_scale(row),
+                        render_layer = "light-effect",
+                        light_mode = "light",
+                        target = { column.center, row.center, },
+                        animation_speed = frame_count / (cycle.duration * 60),
+                        animation_offset = cycle.phase / 360 * frame_count,
+                    })
+                else
+                    table.insert(tiles, R.draw_sprite {
+                        sprite = C.sprites.light(radius, row.letter, column.letter),
+                        surface = surface,
+                        x_scale = column.scale,
+                        y_scale = row.scale,
+                        render_layer = "light-effect",
+                        light_mode = "light",
+                        target = { column.center, row.center, },
+                        tint = tint
+                    })
+                end
             end
         end
     end
@@ -272,7 +309,7 @@ local function draw_light(player_index, rect, surface, mode, color)
 
     ---@type LuaRenderObject[]
     local map_shapes = {}
-    local map_color = color and { r = color.r, g = color.g, b = color.b, a = C.map_alpha, }  or C.colors.default_map_color
+    local map_color = tint and { r = tint.r, g = tint.g, b = tint.b, a = C.map_alpha, } or C.colors.default_map_color
     table.insert(map_shapes, R.draw_rectangle {
         color = map_color,
         filled = true,
@@ -290,7 +327,7 @@ local function draw_light(player_index, rect, surface, mode, color)
         surface = surface,
         color = color,
         rect = Rect.new(left, top, width, height),
-        cycle = table.deepcopy(get_or_init_player_settings(player_index).spectrum),
+        cycle = cycle,
     }
     apply_overlay_audience(light, editing_players())
     storage.lights[storage.last_id] = light
@@ -495,7 +532,7 @@ script.on_event("clear-disco-lights", function(event)
     clear_lights()
 end)
 
-script.on_nth_tick(2, function(event)
+script.on_nth_tick(C.spectrum.update_interval, function(event)
     ---@type table<string, { light: Color, map: Color }>
     local colors = {}
     ---@param cycle SpectrumCycle
@@ -515,13 +552,10 @@ script.on_nth_tick(2, function(event)
 
     for _, light in pairs(storage.lights) do
         if light.mode == "spectrum" then
-            local cached = colors_for(light.cycle)
-            modify_renders(light, "light_tiles", function (object)
-                object.color = cached.light
-            end)
-            modify_renders(light, "map_shapes", function (object)
-                object.color = cached.map
-            end)
+            local map_shapes = light.render_objects.map_shapes
+            if map_shapes[1].valid then
+                set_color(map_shapes, colors_for(light.cycle).map)
+            end
         end
     end
 

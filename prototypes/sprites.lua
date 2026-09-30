@@ -28,7 +28,9 @@ local function light_bands(letters, radius_px)
     }
 end
 
-local function light_sprites(radius, filename)
+---@param radius integer
+---@return table[]
+local function light_sprites(radius)
     local radius_px = radius / C.tiles_per_px
     local collection = {}
 
@@ -37,7 +39,7 @@ local function light_sprites(radius, filename)
             table.insert(collection, {
                 type = "sprite",
                 name = C.sprites.light(radius, row.letter, column.letter),
-                filename = filename,
+                filename = "__disco-lights__/graphics/light_" .. radius .. ".png",
                 priority = "extra-high",
                 flags = { "light" },
                 width = column.size,
@@ -49,8 +51,34 @@ local function light_sprites(radius, filename)
     return collection
 end
 
+---@param radius integer
+---@return table[]
+local function spectrum_light_animations(radius)
+    local scaled_px = radius / C.tiles_per_px / C.spectrum_animation.scale
+    local collection = {}
+
+    for _, row in ipairs(light_bands(C.sprite_row_letters, scaled_px)) do
+        for _, column in ipairs(light_bands(C.sprite_column_letters, scaled_px)) do
+            table.insert(collection, {
+                type = "animation",
+                name = C.sprites.spectrum_light(radius, row.letter, column.letter),
+                filename = "__disco-lights__/graphics/spectrum/light_" .. radius .. "_" .. row.letter .. column.letter .. ".png",
+                priority = "extra-high",
+                flags = { "light" },
+                width = column.size,
+                height = row.size,
+                scale = C.spectrum_animation.scale,
+                frame_count = C.spectrum_animation.frame_count,
+                line_length = C.spectrum_animation.line_length,
+            })
+        end
+    end
+    return collection
+end
+
 for _, radius in pairs(C.radii) do
-    data:extend(light_sprites(radius, "__disco-lights__/graphics/light_" .. radius .. ".png"))
+    data:extend(light_sprites(radius))
+    data:extend(spectrum_light_animations(radius))
 end
 
 

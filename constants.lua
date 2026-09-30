@@ -32,6 +32,7 @@ C.tiles_per_px = util.by_pixel(1, 1)[1]
 
 --- Spectrum cycle limits and defaults
 C.spectrum = {
+    update_interval = 3,
     phase = { min = 0, max = 359, default = 0, },
     duration = { min = 1, max = 60, default = 5, },
 }
@@ -56,6 +57,12 @@ for _, mode in pairs(C.modes) do
     table.insert(C.cursor_label_keys, C.locale.mode(mode))
 end
 
+C.spectrum_animation = {
+    frame_count = 255,
+    scale = 4,
+    line_length = 17,
+}
+
 C.sprites = {
     cursors = {
         [1] = C.sprite_prefix .. "-cursor-box-small",
@@ -64,6 +71,9 @@ C.sprites = {
     },
     light = function (radius, row, column)
         return C.sprite_prefix .. "-" .. radius .. "-" .. row .. column
+    end,
+    spectrum_light = function (radius, row, column)
+        return C.sprite_prefix .. "-spectrum-" .. radius .. "-" .. row .. column
     end,
     spectrum_circle = C.sprite_prefix .. "-spectrum_circle",
     circle = C.sprite_prefix .. "-circle",
