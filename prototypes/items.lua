@@ -5,7 +5,7 @@ data:extend({
         type = "selection-tool",
         name = C.selection_tool_name,
         icon = "__disco-lights__/graphics/icons/planner.png",
-        localised_description = { "shortcut-description.give-disco-lights-tool" },
+        localised_description = { "shortcut-description." .. C.give_tool_name },
         stack_size = 1,
         auto_recycle = false,
         subgroup = "spawnables",

@@ -3,7 +3,7 @@ local C = require "constants"
 data:extend({
     {
         type = "custom-input",
-        name = "give-disco-lights-tool",
+        name = C.give_tool_name,
         key_sequence = "ALT + K",
         consuming = "game-only",
         action = "spawn-item",
