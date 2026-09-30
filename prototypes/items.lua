@@ -7,6 +7,7 @@ data:extend({
         icon = "__disco-lights__/graphics/icons/planner.png",
         localised_description = { "shortcut-description.give-disco-lights-tool" },
         stack_size = 1,
+        auto_recycle = false,
         draw_label_for_cursor_render = true,
         default_label_color = {r = 1, g = 1, b = 1},
         flags = { "only-in-cursor", "not-stackable", "spawnable" },
