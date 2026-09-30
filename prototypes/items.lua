@@ -26,15 +26,5 @@ data:extend({
             cursor_box_type = "entity",
             mode = { "nothing", },
         },
-        alt_reverse_select = {
-            border_color = { r = 0, g = 0.3, b = 1 },
-            cursor_box_type = "entity",
-            mode = { "nothing", },
-        },
-        super_forced_select = {
-            border_color = { r = 1, g = 0, b = 1 },
-            cursor_box_type = "entity",
-            mode = { "nothing", },
-        },
     },
 })

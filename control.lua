@@ -4,7 +4,7 @@ local U = require "util.utilities"
 local Rect = require "util.rect"
 local ColorPickerGui = require "gui.color-picker-gui"
 
----@alias SelectionType "select"|"rev-select"|"alt-select"|"alt-rev-select"|"super-select"
+---@alias SelectionType "select"|"rev-select"|"alt-select"
 
 ---@class DiscoLight
 ---@field render_objects { light_tiles: LuaRenderObject[], corners: LuaRenderObject[], edit_gui: LuaRenderObject[], map_shapes: LuaRenderObject[] }
@@ -375,8 +375,6 @@ local function handle_selection(event, selection_type)
                 player.opened = gui.frame
             end
         end
-    else
-        -- not implemented
     end
 end
 
@@ -681,12 +679,4 @@ end)
 
 script.on_event(defines.events.on_player_alt_selected_area, function(event)
     handle_selection(event, "alt-select")
-end)
-
-script.on_event(defines.events.on_player_alt_reverse_selected_area, function(event)
-    handle_selection(event, "alt-rev-select")
-end)
-
-script.on_event(defines.events.on_player_super_forced_selected_area, function(event)
-    handle_selection(event, "super-select")
 end)
