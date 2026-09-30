@@ -365,6 +365,9 @@ local function handle_selection(event, selection_type)
     elseif selection_type == "alt-select" then -- Open color picker
         local player_settings = get_or_init_player_settings(event.player_index)
         local gui = player_settings.gui
+        if gui and not gui.frame.valid then
+            gui = nil
+        end
         if not gui then
             gui = ColorPickerGui.new(event.player_index)
             player_settings.gui = gui
