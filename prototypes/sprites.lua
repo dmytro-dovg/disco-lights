@@ -92,7 +92,6 @@ data:extend({
         priority = "extra-high",
         frame_count = 16,
         animation_speed = 0.2,
-        lines_per_file = 1,
     },
     {
         type = "sprite",
