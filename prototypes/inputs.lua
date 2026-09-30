@@ -11,11 +11,6 @@ data:extend({
     },
     {
         type = "custom-input",
-        name = "clear-disco-lights",
-        key_sequence = "CONTROL + ALT + Z",
-    },
-    {
-        type = "custom-input",
         name = "disco-lights-tool-size-up",
         key_sequence = "ALT + mouse-wheel-up",
         consuming = "none",

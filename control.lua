@@ -67,13 +67,6 @@ local function destroy_light(light)
     destroy_renders(light, "map_shapes")
 end
 
-local function clear_lights()
-    for _, light in pairs(storage.lights) do
-        destroy_light(light)
-    end
-    storage.lights = {}
-end
-
 ---@param player_index integer
 ---@return PlayerSettings
 local function init_player_settings(player_index)
@@ -518,10 +511,6 @@ script.on_configuration_changed(function(event)
         settings.translations = nil
     end
     apply_overlay_audience_to_all()
-end)
-
-script.on_event("clear-disco-lights", function(event)
-    clear_lights()
 end)
 
 script.on_nth_tick(C.spectrum.update_interval, function(event)
