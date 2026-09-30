@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+die() {
+    printf '%s\n' "$1" >&2
+    exit "${2:-1}"
+}
+
+usage() {
+    printf "Usage: %s FRAMES SCALE LINE_LENGTH OUTPUT_DIR LIGHT_PNG...\n" "${0##*/}" >&2
+}
+
+main() {
+    set -e
+
+    if (( $# < 5 )); then
+        usage
+        return 1
+    fi
+
+    local frames=$1
+    local scale=$2
+    local line_length=$3
+    local output=$4
+    shift 4
+
+    local im
+    if command -v magick >/dev/null 2>&1; then
+        im=magick
+    elif command -v convert >/dev/null 2>&1; then
+        im=convert
+    else
+        die "No ImageMagick installed."
+    fi
+
+    local temp_dir
+    temp_dir="$(mktemp -d)" || die "Cannot create temp dir"
+    trap "rm -rf '$temp_dir'" EXIT
+
+    mkdir -p "$output"
+
+    local rows=$(( (frames + line_length - 1) / line_length ))
+    awk -v frames="$frames" -v cols="$line_length" -v rows="$rows" 'BEGIN {
+        printf "P3\n%d %d\n255\n", cols, rows
+        for (k = 0; k < cols * rows; k++) {
+            r = 0; g = 0; b = 0
+            if (k < frames) {
+                # Same piecewise ramp as U.hue_to_rgb
+                h = k / frames
+                i = int(h * 6); f = h * 6 - i; q = 1 - f; t = f
+                i = i % 6
+                if (i == 0)      { r = 1; g = t; b = 0 }
+                else if (i == 1) { r = q; g = 1; b = 0 }
+                else if (i == 2) { r = 0; g = 1; b = t }
+                else if (i == 3) { r = 0; g = q; b = 1 }
+                else if (i == 4) { r = t; g = 0; b = 1 }
+                else             { r = 1; g = 0; b = q }
+            }
+            printf "%d %d %d\n", int(r * 255 + 0.5), int(g * 255 + 0.5), int(b * 255 + 0.5)
+        }
+    }' > "$temp_dir/hues.ppm"
+
+    local input name size radius_px scaled_px
+    for input in "$@"; do
+        name="$(basename "$input" .png)"
+        size="$($im identify -format '%w' "$input")"
+        radius_px=$(( (size - 1) / 2 ))
+        (( radius_px % scale == 0 )) || die "$input: corner size $radius_px is not divisible by $scale"
+        scaled_px=$(( radius_px / scale ))
+
+        # Bands as "letter source_offset source_size target_size"
+        local rows_spec=("t 0 $radius_px $scaled_px" "m $radius_px 1 1" "b $((radius_px + 1)) $radius_px $scaled_px")
+        local cols_spec=("l 0 $radius_px $scaled_px" "m $radius_px 1 1" "r $((radius_px + 1)) $radius_px $scaled_px")
+
+        local row col row_letter row_offset row_size row_target col_letter col_offset col_size col_target
+        for row in "${rows_spec[@]}"; do
+            read -r row_letter row_offset row_size row_target <<< "$row"
+            for col in "${cols_spec[@]}"; do
+                read -r col_letter col_offset col_size col_target <<< "$col"
+                local piece="${row_letter}${col_letter}"
+                local sheet_w=$(( col_target * line_length ))
+                local sheet_h=$(( row_target * rows ))
+
+                # Alpha shape of the piece as a grayscale mask
+                $im "$input" -crop "${col_size}x${row_size}+${col_offset}+${row_offset}" +repage \
+                    -alpha extract -resize "${col_target}x${row_target}!" \
+                    "$temp_dir/mask.png"
+
+                # Each hue pixel becomes one block
+                $im \( "$temp_dir/hues.ppm" -sample "${sheet_w}x${sheet_h}!" \) \
+                    \( "$temp_dir/mask.png" -write mpr:mask +delete \
+                       -size "${sheet_w}x${sheet_h}" tile:mpr:mask \) \
+                    -alpha off -compose CopyOpacity -composite \
+                    "PNG32:$output/${name}_${piece}.png"
+            done
+        done
+        printf 'Wrote %s/%s_*.png (frame corner %spx)\n' "$output" "$name" "$scaled_px" >&2
+    done
+}
+
+main "$@"
