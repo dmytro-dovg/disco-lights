@@ -9,7 +9,6 @@ local G = {}
 ---@field slider LuaGuiElement
 
 ---@class ColorPickerGui
----@field type string
 ---@field frame LuaGuiElement
 ---@field close_button LuaGuiElement
 ---@field static_swatch LuaGuiElement
@@ -240,7 +239,6 @@ function G.new(player_index)
     spectrum_swatch.style.color = {r = 1, g = 1, b = 1}
 
     return {
-        type = "color-picker-gui",
         frame = outer,
         close_button = close_button,
         static_swatch = static_swatch,

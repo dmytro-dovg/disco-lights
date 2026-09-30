@@ -9,7 +9,6 @@ local ColorPickerGui = require "gui.color-picker-gui"
 ---@class DiscoLight
 ---@field render_objects { light_tiles: LuaRenderObject[], corners: LuaRenderObject[], edit_gui: LuaRenderObject[], map_shapes: LuaRenderObject[] }
 ---@field surface LuaSurface
----@field color Color?
 ---@field cycle SpectrumCycle
 ---@field rect Rect
 ---@field mode Mode
@@ -318,7 +317,6 @@ local function draw_light(player_index, rect, surface, mode, color)
         mode = current_player_mode(player_index),
         render_objects = { light_tiles = tiles, corners = corners, edit_gui = edit_gui, map_shapes = map_shapes, },
         surface = surface,
-        color = color,
         rect = Rect.new(left, top, width, height),
         cycle = cycle,
     }
