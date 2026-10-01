@@ -1,6 +1,6 @@
 {
     "name": "disco-lights",
-    "description": "Placeable ambient lights.",
+    "description": "Placeable ambient light sources. Add some mood lighting to your factory or have a disco party with biters. The lights are purely decorative and can be placed without any resources or research.",
     "version": "0.0.1",
     "title": "Disco Lights",
     "author": "imoth_f",
