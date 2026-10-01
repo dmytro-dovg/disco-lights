@@ -1,0 +1,22 @@
+---------------------------------------------------------------------------------------------------
+Version: 2.1.0
+Date: 2026-10-01
+  Features:
+    - Added Disco lights planner.
+    - Added radius selection.
+    - Added static mode.
+    - Added spectrum mode.
+    - Added edit mode which shows lightss corners and map markers while holding the planner.
+    - Added Factoriopedia entry for the planner.
+  Control:
+    - Alt + K to spawn Disco lights planner.
+    - Left-click and drag to add a light.
+    - Right-click and drag to remove lights.
+    - Shift + Left-click to open light settings.
+    - Control + Alt + Mouse wheel up/down to change mode.
+    - Alt + Mouse wheel up/down to change radius.
+  Gui:
+    - Added light settings window.
+  Locale:
+    - Added English.
+    - Added Ukrainian.
