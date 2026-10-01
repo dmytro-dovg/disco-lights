@@ -6,7 +6,7 @@ Date: 2026-10-01
     - Added radius selection.
     - Added static mode.
     - Added spectrum mode.
-    - Added edit mode which shows lightss corners and map markers while holding the planner.
+    - Added edit mode which shows lights' corners and map markers while holding the planner.
     - Added Factoriopedia entry for the planner.
   Control:
     - Alt + K to spawn Disco lights planner.
