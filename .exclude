@@ -1,6 +1,7 @@
 .git
 .git/*
 .gitignore
+.gitmodules
 .github
 .github/*
 .vscode
@@ -24,3 +25,8 @@ tools/*
 *.svg
 examples
 examples/*
+tests
+tests/*
+.lua
+.lua/*
+thumbnail_background.png
