@@ -151,13 +151,20 @@ local function sprite_bands(letters, leading, trailing, radius, count)
     }
 end
 
+---@param band { letter: string, scale: number }
+local function spectrum_band_scale(band)
+    if band.letter == "m" then
+        return band.scale / C.spectrum_animation.scale
+    end
+    return band.scale
+end
 
 ---@param player_index integer
 ---@param rect Rect
 ---@param surface LuaSurface
 ---@param mode Mode
 ---@param color Color?
-local function draw_light(player_index, rect, surface, mode, color)
+local function place_light(player_index, rect, surface, mode, color)
     local tiles = {}
 
     local left = math.floor(rect.position.x)
@@ -182,13 +189,6 @@ local function draw_light(player_index, rect, surface, mode, color)
     end
 
     local frame_count = C.spectrum_animation.frame_count
-    ---@param band { letter: string, scale: number }
-    local function spectrum_band_scale(band)
-        if band.letter == "m" then
-            return band.scale / C.spectrum_animation.scale
-        end
-        return band.scale
-    end
 
     for _, row in ipairs(sprite_bands(C.sprite_row_letters, top, bottom, radius, vertical_count)) do
         for _, column in ipairs(sprite_bands(C.sprite_column_letters, left, right, radius, horizontal_count)) do
@@ -326,23 +326,22 @@ local function draw_light(player_index, rect, surface, mode, color)
 end
 
 
----@param event any
----@param selection_type SelectionType
-local function handle_selection(event, selection_type)
+---@param event EventData.on_player_selected_area|EventData.on_player_reverse_selected_area|EventData.on_player_alt_selected_area|EventData.on_player_alt_reverse_selected_area
+local function handle_selection(event, selection_mode)
     if event.item ~= C.selection_tool_name then return end
 
-    U.d(event.player_index, "Selection: %s", selection_type)
+    U.d(event.player_index, "Selection: %s", selection_mode)
 
     local rect = Rect.from_bounding_box(event.area)
 
-    if selection_type == "select" then -- Add light
+    if event.selection_mode == defines.selection_mode.select then -- Add light
         local mode = current_player_mode(event.player_index)
         local last_color = current_player_last_color(event.player_index)
         local color = mode == "static" and last_color or nil
-        draw_light(event.player_index,
+        place_light(event.player_index,
             rect,
             event.surface, current_player_mode(event.player_index), color)
-    elseif selection_type == "rev-select" then -- Remove light
+    elseif event.selection_mode == defines.selection_mode.reverse_select then -- Remove light
         local to_delete = {}
         for i, light in pairs(storage.lights) do
             if light.surface == event.surface and Rect.is_in_rect(light.rect, rect) then
@@ -353,7 +352,7 @@ local function handle_selection(event, selection_type)
             destroy_light(storage.lights[i])
             storage.lights[i] = nil
         end
-    elseif selection_type == "alt-select" then -- Open color picker
+    elseif event.selection_mode == defines.selection_mode.alt_select then -- Open color picker
         local player_settings = get_or_init_player_settings(event.player_index)
         local gui = player_settings.gui
         if gui and not gui.frame.valid then
@@ -668,13 +667,13 @@ script.on_event(defines.events.on_player_cursor_stack_changed, function(event)
 end)
 
 script.on_event(defines.events.on_player_selected_area, function(event)
-    handle_selection(event, "select")
+    handle_selection(event)
 end)
 
 script.on_event(defines.events.on_player_reverse_selected_area, function(event)
-    handle_selection(event, "rev-select")
+    handle_selection(event)
 end)
 
 script.on_event(defines.events.on_player_alt_selected_area, function(event)
-    handle_selection(event, "alt-select")
+    handle_selection(event)
 end)
