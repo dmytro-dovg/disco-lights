@@ -12,6 +12,7 @@ local ColorPickerGui = require "gui.color-picker-gui"
 ---@field cycle SpectrumCycle
 ---@field rect Rect
 ---@field mode Mode
+---@field radius integer
 
 ---@class PlayerSettings
 ---@field radius_index integer
@@ -21,6 +22,7 @@ local ColorPickerGui = require "gui.color-picker-gui"
 ---@field spectrum SpectrumCycle
 ---@field gui ColorPickerGui?
 ---@field translations table<string, string>?
+---@field preview_light_id integer?
 
 ---@class ModStorage
 ---@field players table<integer, PlayerSettings>
@@ -159,25 +161,93 @@ local function spectrum_band_scale(band)
     return band.scale
 end
 
+---@param rect Rect
+---@return integer left
+---@return integer top
+---@return integer right
+---@return integer bottom
+local function light_bounds(rect)
+    local left = math.floor(rect.position.x)
+    local top = math.floor(rect.position.y)
+    local right = math.max(math.ceil(rect.position.x + rect.size.width), left + 1)
+    local bottom = math.max(math.ceil(rect.position.y + rect.size.height), top + 1)
+    return left, top, right, bottom
+end
+
+---@param left integer
+---@param top integer
+---@param right integer
+---@param bottom integer
+---@return MapPosition[]
+local function corner_locations(left, top, right, bottom)
+    return {
+        { left, top, },
+        { right, top, },
+        { right, bottom, },
+        { left, bottom, },
+    }
+end
+
+---@param light DiscoLight
+---@param left integer
+---@param top integer
+---@param right integer
+---@param bottom integer
+local function layout_light(light, left, top, right, bottom)
+    local width = right - left
+    local height = bottom - top
+    local objects = light.render_objects
+
+    local index = 1
+    for _, row in ipairs(sprite_bands(C.sprite_row_letters, top, bottom, light.radius, height)) do
+        for _, column in ipairs(sprite_bands(C.sprite_column_letters, left, right, light.radius, width)) do
+            local tile = objects.light_tiles[index]
+            tile.target = { column.center, row.center, }
+            if light.mode == "spectrum" then
+                tile.x_scale = spectrum_band_scale(column)
+                tile.y_scale = spectrum_band_scale(row)
+            else
+                tile.x_scale = column.scale
+                tile.y_scale = row.scale
+            end
+            index = index + 1
+        end
+    end
+
+    local corner_sprite = C.sprites.cursors[math.min(width, height)] or C.sprites.cursors[3]
+    local locations = corner_locations(left, top, right, bottom)
+    for i, corner in ipairs(objects.corners) do
+        corner.sprite = corner_sprite
+        corner.target = locations[i]
+    end
+
+    local color_circle_radius = 0.5
+    local color_circle_target = { left + color_circle_radius, top - 0.25 - color_circle_radius, }
+    objects.edit_gui[1].target = color_circle_target
+    objects.edit_gui[2].target = color_circle_target
+    objects.edit_gui[3].target = { left + 1.2, top - 0.75, }
+    objects.edit_gui[4].target = { left + 1.2, top - 0.80, }
+
+    objects.map_shapes[1].left_top = { left, top, }
+    objects.map_shapes[1].right_bottom = { right, bottom, }
+
+    light.rect = Rect.new(left, top, width, height)
+end
+
 ---@param player_index integer
 ---@param rect Rect
 ---@param surface LuaSurface
 ---@param mode Mode
 ---@param color Color?
-local function place_light(player_index, rect, surface, mode, color)
+---@param radius integer
+---@return DiscoLight
+---@return integer
+local function place_light(player_index, rect, surface, mode, color, radius)
     local tiles = {}
 
-    local left = math.floor(rect.position.x)
-    local top = math.floor(rect.position.y)
-    local right = math.ceil(rect.position.x + rect.size.width)
-    right = math.max(right, left + 1)
-    local bottom = math.ceil(rect.position.y + rect.size.height)
-    bottom = math.max(bottom, top + 1)
+    local left, top, right, bottom = light_bounds(rect)
     local width = right - left
     local height = bottom - top
-
-    local radius = current_player_radius(player_index)
-    if not radius then return end
 
     local horizontal_count = width
     local vertical_count = height
@@ -223,21 +293,16 @@ local function place_light(player_index, rect, surface, mode, color)
 
     ---@type LuaRenderObject[]
     local corners = {}
-    local corner_locations = {
-        [0] = { left, top, },
-        [1] = { right, top, },
-        [2] = { right, bottom, },
-        [3] = { left, bottom, },
-    }
+    local locations = corner_locations(left, top, right, bottom)
 
-    for i = 0, 3, 1 do
+    for i = 1, 4 do
         table.insert(corners, R.draw_sprite {
             sprite = C.sprites.cursors[math.min(width, height)] or C.sprites.cursors[3],
             surface = surface,
-            target = corner_locations[i],
+            target = locations[i],
             render_layer = "selection-box",
             light_mode = "glow",
-            orientation = i * 0.25,
+            orientation = (i - 1) * 0.25,
         })
     end
 
@@ -319,29 +384,59 @@ local function place_light(player_index, rect, surface, mode, color)
         surface = surface,
         rect = Rect.new(left, top, width, height),
         cycle = cycle,
+        radius = radius,
     }
     apply_overlay_audience(light, editing_players())
     storage.lights[storage.last_id] = light
     storage.last_id = storage.last_id + 1
+    return light, storage.last_id - 1
 end
 
+---@param player_index integer
+local function discard_preview(player_index)
+    local player_settings = storage.players[player_index]
+    if not player_settings or not player_settings.preview_light_id then return end
+    local light = storage.lights[player_settings.preview_light_id]
+    if light then
+        destroy_light(light)
+        storage.lights[player_settings.preview_light_id] = nil
+    end
+    player_settings.preview_light_id = nil
+end
 
----@param event EventData.on_player_selected_area|EventData.on_player_reverse_selected_area|EventData.on_player_alt_selected_area|EventData.on_player_alt_reverse_selected_area
-local function handle_selection(event, selection_mode)
+---@param event EventData.on_player_selected_area|EventData.on_player_start_selected_area|EventData.on_player_change_selected_area
+---@param rect Rect
+local function update_preview(event, rect)
+    local player_settings = get_or_init_player_settings(event.player_index)
+    local light = player_settings.preview_light_id and storage.lights[player_settings.preview_light_id]
+    if light and light.surface == event.surface and light.render_objects.light_tiles[1].valid then
+        layout_light(light, light_bounds(rect))
+        return
+    end
+    discard_preview(event.player_index)
+    local mode = current_player_mode(event.player_index)
+    local last_color = current_player_last_color(event.player_index)
+    local color = mode == "static" and last_color or nil
+    local radius = current_player_radius(event.player_index)
+    local _, id = place_light(event.player_index, rect, event.surface, mode, color, radius)
+    player_settings.preview_light_id = id
+end
+
+---@param event any
+---@param selection_stage SelectionStage
+local function handle_selection(event, selection_stage)
     if event.item ~= C.selection_tool_name then return end
-
-    U.d(event.player_index, "Selection: %s", selection_mode)
 
     local rect = Rect.from_bounding_box(event.area)
 
-    if event.selection_mode == defines.selection_mode.select then -- Add light
-        local mode = current_player_mode(event.player_index)
-        local last_color = current_player_last_color(event.player_index)
-        local color = mode == "static" and last_color or nil
-        place_light(event.player_index,
-            rect,
-            event.surface, current_player_mode(event.player_index), color)
-    elseif event.selection_mode == defines.selection_mode.reverse_select then -- Remove light
+    if selection_stage == C.selection_stage.cancel or event.selection_mode ~= defines.selection_mode.select then
+        discard_preview(event.player_index)
+    end
+
+    if event.selection_mode == defines.selection_mode.select and selection_stage == C.selection_stage.start then -- Add light
+        discard_preview(event.player_index)
+        update_preview(event, rect)
+    elseif event.selection_mode == defines.selection_mode.reverse_select and selection_stage == C.selection_stage.done then -- Remove light
         local to_delete = {}
         for i, light in pairs(storage.lights) do
             if light.surface == event.surface and Rect.is_in_rect(light.rect, rect) then
@@ -352,7 +447,7 @@ local function handle_selection(event, selection_mode)
             destroy_light(storage.lights[i])
             storage.lights[i] = nil
         end
-    elseif event.selection_mode == defines.selection_mode.alt_select then -- Open color picker
+    elseif event.selection_mode == defines.selection_mode.alt_select and selection_stage == C.selection_stage.done then -- Open color picker
         local player_settings = get_or_init_player_settings(event.player_index)
         local gui = player_settings.gui
         if gui and not gui.frame.valid then
@@ -372,6 +467,15 @@ local function handle_selection(event, selection_mode)
                 player.opened = gui.frame
             end
         end
+    end
+
+    if event.selection_mode == defines.selection_mode.select and selection_stage == C.selection_stage.change then
+        update_preview(event, rect)
+    end
+
+    if event.selection_mode == defines.selection_mode.select and selection_stage == C.selection_stage.done then
+        update_preview(event, rect)
+        storage.players[event.player_index].preview_light_id = nil
     end
 end
 
@@ -417,6 +521,7 @@ local function update_planner(player_index)
             "\n" .. translated(settings, C.locale.cursor_mode, "") .. " " .. translated(settings, C.locale.mode(mode), mode)
     else
         enable_editting(player_index, false)
+        discard_preview(player_index)
     end
 end
 
@@ -471,6 +576,7 @@ end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
     hide_gui(event.player_index)
+    discard_preview(event.player_index)
     local player_settings = storage.players[event.player_index]
     if player_settings then
         player_settings.editing = false
@@ -480,6 +586,7 @@ end)
 
 script.on_event(defines.events.on_player_removed, function(event)
     hide_gui(event.player_index)
+    discard_preview(event.player_index)
     storage.players[event.player_index] = nil
     apply_overlay_audience_to_all()
 end)
@@ -667,13 +774,25 @@ script.on_event(defines.events.on_player_cursor_stack_changed, function(event)
 end)
 
 script.on_event(defines.events.on_player_selected_area, function(event)
-    handle_selection(event)
+    handle_selection(event, C.selection_stage.done)
 end)
 
 script.on_event(defines.events.on_player_reverse_selected_area, function(event)
-    handle_selection(event)
+    handle_selection(event, C.selection_stage.done)
 end)
 
 script.on_event(defines.events.on_player_alt_selected_area, function(event)
-    handle_selection(event)
+    handle_selection(event, C.selection_stage.done)
+end)
+
+script.on_event(defines.events.on_player_start_selected_area, function(event)
+    handle_selection(event, C.selection_stage.start)
+end)
+
+script.on_event(defines.events.on_player_change_selected_area, function(event)
+    handle_selection(event, C.selection_stage.change)
+end)
+
+script.on_event(defines.events.on_player_cancel_selected_area, function(event)
+    handle_selection(event, C.selection_stage.cancel)
 end)

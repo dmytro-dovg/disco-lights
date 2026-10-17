@@ -91,4 +91,16 @@ C.colors = {
     default_map_color = { r = 1, g = 0, b = 1, a = C.map_alpha },
 }
 
+---@enum SelectionStage
+C.selection_stage = {
+    ---@class SelectionStage.start
+    start = {},
+    ---@class SelectionStage.change
+    change = {},
+    ---@class SelectionStage.cancel
+    cancel = {},
+    ---@class SelectionStage.done
+    done = {},
+}
+
 return C
