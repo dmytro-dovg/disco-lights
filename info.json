@@ -6,6 +6,6 @@
     "author": "imoth_f",
     "factorio_version": "2.1",
     "dependencies": [
-        "base >= 2.1.22"
+        "base >= 2.1.24"
     ]
 }
