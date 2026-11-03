@@ -13,7 +13,7 @@ data:extend({
         draw_label_for_cursor_render = true,
         default_label_color = {r = 1, g = 1, b = 1},
         flags = { "only-in-cursor", "not-stackable", "spawnable", "always-show", "excluded-from-character-lift-weight" },
-        send_pre_selection_events = true,
+        send_pre_selection_events = settings.startup[C.drag_preview_setting].value,
         select = {
             border_color = { r = 0, g = 0.3, b = 1 },
             cursor_box_type = "entity",
