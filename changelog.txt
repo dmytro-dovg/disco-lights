@@ -1,7 +1,7 @@
 
 ---------------------------------------------------------------------------------------------------
 Version: 2.1.1
-Date: 2026-xx-xx
+Date: 2026-11-03
   Features:
     - Added live preview while placing the light.
     - Added a setting to turn off live preview.
